@@ -1,0 +1,38 @@
+
+# List of pre-existing secrets containing private registry credentials
+# For example
+# imagePullSecrets:
+# - name: myRegistryKeySecretName
+imagePullSecrets: []
+
+# Set to true to output all shell commands (enables `set -x` in scripts)
+debug: true
+
+nodeSelector: {}
+nodeAffinity: {}
+tolerations:
+  - key: "" # An empty key with operator Exists matches all keys, values and effects which means this will tolerate everything.
+    operator: Exists
+    effect: NoSchedule
+  - key: ""
+    operator: Exists
+    effect: NoExecute
+  - key: CriticalAddonsOnly
+    operator: Exists
+
+gardenlinux:
+  imageRegistry: ghcr.io
+  image: gardenlinux/gardenlinux/kmodbuild
+  version: amd64-1592.4
+
+nvidia:
+  driverVersion: "550.127.08"
+  installer:
+    hostDriverPath: /opt/drivers
+    resources: {}
+  devicePlugin:
+    imageRegistry: gcr.io
+    image: gke-release/nvidia-gpu-device-plugin
+    version: 1.0.25-gke.56
+    hostDevicePluginPath: /var/lib/kubelet/device-plugins
+    resources: {}

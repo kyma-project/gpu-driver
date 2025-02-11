@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ template "gpu-driver.name" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  updateStrategy:
+    type: OnDelete
+  selector:
+    matchLabels:
+      name: {{ template "gpu-driver.name" . }}
+  template:
+    metadata:
+      labels:
+        name: {{ template "gpu-driver.name" . }}
+    spec:
+      priorityClassName: system-node-critical
+      {{- if .Values.nodeAffinity }}
+      affinity:
+        nodeAffinity:
+{{ toYaml .Values.nodeAffinity | indent 10 }}
+      {{- end }}
+      hostPID: true
+      imagePullSecrets: {{ template "image-pull-secrets"}}
+      containers:
+      - name: gpu-driver
+        {{- $imageUri := .Values.gardenlinux.image }}
+        {{- if .Values.gardenlinux.imageRegistry }}
+          {{ $imageUri = printf "%s/%s" .Values.gardenlinux.imageRegistry $imageUri }}
+        {{- end }}
+        image: {{ $imageUri }}:{{ required "gardenlinux.version" .Values.gardenlinux.version }}
+        workingDir: "/work"
+        command:
+          - "/work/entrypoint.sh"
+        securityContext:
+          privileged: true
+{{- if .Values.nvidia.installer.resources }}
+        resources:
+{{ toYaml .Values.nvidia.installer.resources | indent 12 }}
+{{- end }}
+        env:
+          - name: KERNEL_TYPE
+            value: cloud
+          - name: TARGET_ARCH
+            value: amd64
+          - name: DRIVER_VERSION
+            value: 550.127.08
+          - name: LD_ROOT
+            value: /root
+          - name: DEBUG
+            value: {{ .Values.debug | quote }}
+          - name: HOST_DRIVER_PATH
+            value: {{ .Values.nvidia.installer.hostDriverPath }}
+        volumeMounts:
+          - name: gpu-driver
+            mountPath: /work
+          - name: dev
+            mountPath: /dev
+          - name: ld-root
+            mountPath: /root
+          - name: module-cache
+            mountPath: /opt/nvidia-installer/cache
+          - name: module-install-dir-base
+            mountPath: {{ required "nvidia.installer.hostDriverPath" .Values.nvidia.installer.hostDriverPath }}
+{{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+{{- end }}
+{{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 6 }}
+{{- end }}
+      volumes:
+        - name: gpu-driver
+          configMap:
+            name: {{ template "gpu-driver.name" . }}
+            defaultMode: 0744
+        - name: dev
+          hostPath:
+            path: /dev
+        - name: ld-root
+          hostPath:
+            path: /
+        - name: module-cache
+          hostPath:
+            path: /opt/nvidia-installer/cache
+        - name: module-install-dir-base
+          hostPath:
+            path: {{ required "nvidia.installer.hostDriverPath" .Values.nvidia.installer.hostDriverPath }}

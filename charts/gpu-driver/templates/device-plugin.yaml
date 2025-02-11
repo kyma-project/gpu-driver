@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ template "device-plugin.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "device-plugin.name" . }}
+spec:
+  {{- $imageUri := .Values.nvidia.devicePlugin.image }}
+  {{- if .Values.nvidia.devicePlugin.imageRegistry }}
+    {{ $imageUri = printf "%s/%s" .Values.nvidia.devicePlugin.imageRegistry $imageUri }}
+  {{- end }}
+  selector:
+    matchLabels:
+      name: {{ template "device-plugin.name" . }}
+  template:
+    metadata:
+      labels:
+        name: {{ template "device-plugin.name" . }}
+    spec:
+      {{- if .Values.nodeAffinity }}
+      affinity:
+        nodeAffinity:
+{{  toYaml .Values.nodeAffinity | indent 10 }}
+      {{- end}}
+      priorityClassName: system-node-critical
+      volumes:
+        - name: device-plugin
+          hostPath:
+            path: {{ required "nvidia.devicePlugin.hostDevicePluginPath" .Values.nvidia.devicePlugin.hostDevicePluginPath }}
+        - name: dev
+          hostPath:
+            path: /dev
+        - hostPath:
+            path: /opt/nvidia-installer/cache/nvidia/{{ required "nvidia.driverVersion" .Values.nvidia.driverVersion }}
+            type: Directory
+          name: nvidia
+      imagePullSecrets: {{ template "image-pull-secrets" . }}
+      containers:
+        - name: nvidia-gpu-device-plugin
+          image: {{ $imageUri }}:{{ required "nvidia.devicePlugin.version" .Values.nvidia.devicePlugin.version }}
+          command:
+            - "/usr/bin/nvidia-gpu-device-plugin"
+            - "-logtostderr"
+            - {{ printf "-host-path=%s/nvidia" .Values.nvidia.installer.hostDriverPath }}
+          env:
+            - name: LD_LIBRARY_PATH
+              value: /usr/local/nvidia/lib
+            - name: GOMAXPROCS
+              value: '1'
+          resources:
+{{ toYaml .Values.nvidia.devicePlugin.resources | indent 12 }}
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: device-plugin
+              mountPath: /device-plugin
+            - name: dev
+              mountPath: /dev
+            - mountPath: /usr/local/nvidia
+              name: nvidia
+{{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+{{- end }}
+{{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 6 }}
+{{- end }}
+  updateStrategy:
+    type: RollingUpdate

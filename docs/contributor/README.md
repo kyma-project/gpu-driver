@@ -17,7 +17,7 @@ Run flow:
 * run ??? and detect Garden Linux version from the node
   * outputs
     * GARDENLINUX_VERSION
-* run ghcr.io/gardenlinux/gardenlinux/kmodbuild:GARDENLINUX_VERSION
+* run ghcr.io/gardenlinux/gardenlinux/kmodbuild:**GARDENLINUX_VERSION**
   * run `compile.sh`
   * inputs
     * KERNEL_TYPE

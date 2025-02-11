@@ -75,6 +75,15 @@ install() {
             > "${LD_ROOT}/etc/ld.so.conf.d/${DRIVER_NAME}.conf"
         ldconfig -r "${LD_ROOT}" 2> /dev/null
     fi
+
+    echo "TMP DEBUG START"
+    echo "Files in src ${CACHE_DIR}/${DRIVER_NAME}/${DRIVER_VERSION}"
+    ls -laR "${CACHE_DIR}/${DRIVER_NAME}/${DRIVER_VERSION}"
+
+    echo "Files in dst install dir "${INSTALL_DIR}/${DRIVER_NAME}""
+    ls -laR "${CACHE_DIR}/${DRIVER_NAME}/${DRIVER_VERSION}"
+    echo "TMP DEBUG END"
+
     # shellcheck disable=SC1090
     source "${BIN_DIR}/install.sh"
 }
