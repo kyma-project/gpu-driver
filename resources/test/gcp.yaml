@@ -29,50 +29,31 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: image-generator-5
+  name: image-generator
 spec:
   containers:
     - name: image-generator
       image: ghcr.io/pbochynski/diffusers-k8s:0.0.5
       command:
-        - "python3"
-        - "generate_image.py"
-        - "--device=cuda"
+        - "/bin/bash"
+        - "-c"
+        - "--"
+      args:
+        - 'python3 generate_image.py --device=cuda && echo "Image geenrated" && echo "Done" && sleep infinity'
       ports:
         - containerPort: 8000
       volumeMounts:
         - name: storage
           mountPath: /root/.cache/huggingface
-          subPath: r005/model-cache
+          subPath: model-cache
         - name: storage
           mountPath: /app/output
           subPath: output
+        - name: storage
+          mountPath: /mnt/storage
       resources:
         limits:
           nvidia.com/gpu: "1" # Ensure GPU is requested
-  volumes:
-    - name: storage
-      persistentVolumeClaim:
-        claimName: model-cache-pvc
----
-apiVersion: v1
-kind: Pod
-metadata:
-  name: image-viewer
-spec:
-  containers:
-    - name: image-generator
-      image: ghcr.io/pbochynski/diffusers-k8s:0.0.5
-      command:
-        - "python3"
-        - "-m"
-        - "http.server"
-        - "8000"
-      ports:
-        - containerPort: 8000
-      volumeMounts:
-        - name: storage
-          mountPath: /app/storage
   volumes:
     - name: storage
       persistentVolumeClaim:

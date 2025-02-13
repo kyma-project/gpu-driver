@@ -1,17 +1,29 @@
 # GPU Driver Helm chart
 
-## Installation
 
-Helm repo is not yet established. Clone the repository and `cd charts/gpu-driver`.
+## Usage
 
-```shell
-kubectl create ns gpu-driver
-helm upgrade --install -n gpu-driver gpu-driver .
-```
+[Helm](https://helm.sh) must be installed to use the charts. Please refer to
+Helm's [documentation](https://helm.sh/docs) to get started.
 
-## Uninstallation
+Once Helm has been set up correctly, add the repo as follows:
 
 ```shell
-helm uninstall -n gpu-driver gpu-driver
+helm repo add kyma-gpu-driver https://kyma-project.github.io/gpu-driver
 ```
 
+If you had already added this repo earlier, run `helm repo update` to retrieve
+the latest versions of the packages. You can then run 
+`helm search repo kyma-gpu-driver` to see the charts.
+
+To install the `gpu-driver` chart:
+
+```shell
+helm install my-gpu-driver kyma-gpu-driver/gpu-driver
+```
+
+To uninstall the chart:
+
+```shell
+helm uninstall my-gpu-driver
+```
