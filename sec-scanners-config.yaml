@@ -1,0 +1,4 @@
+module-name: gpu-driver
+kind: kyma
+bdba:
+  - europe-docker.pkg.dev/kyma-project/prod/gpu-driver:550.127.08-amd64
