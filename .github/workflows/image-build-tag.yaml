@@ -11,18 +11,18 @@ permissions:
 
 jobs:
   version:
-    if: startsWith(github.event.release.tag_name, 'container-')
+    if: startsWith(github.ref_name, 'container-')
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - id: version
         run: |
-          TAG=${{ github.event.release.tag_name }}
+          TAG=${{ github.ref_name }}
           echo "version=${TAG#container-}" >> "$GITHUB_OUTPUT"
 
   build-image:
-    if: startsWith(github.event.release.tag_name, 'container-')
+    if: startsWith(github.ref_name, 'container-')
     strategy:
       matrix:
         arch: ["amd64"]
