@@ -2,7 +2,8 @@
 
 echo "GPU driver installer entrypoint"
 
-set -e
+set -euo pipefail
+
 if ${DEBUG}; then
   set -x
   env
