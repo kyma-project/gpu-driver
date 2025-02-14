@@ -19,10 +19,11 @@ jobs:
         driver_version: ["550.127.08"]
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
     with:
-      tags: "${{ matrix.driver_version }}-${{ matrix.arch }}"
+      tags: |
+        ${{ matrix.driver_version }}-${{ matrix.arch }}
       name: gpu-driver
       dockerfile: Dockerfile
       export-tags: true
-      build-args:
-        TARGET_ARCH: ${{ matrix.arch }}
-        DRIVER_VERSION: ${{ matrix.driver_version }}
+      build-args: |
+        TARGET_ARCH=${{ matrix.arch }}
+        DRIVER_VERSION=${{ matrix.driver_version }}
