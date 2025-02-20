@@ -8,6 +8,11 @@ imagePullSecrets: []
 # Set to true to output all shell commands (enables `set -x` in scripts)
 debug: true
 
+# required, must be set, ie 6.6.63-cloud-amd64
+kernelVersion: ""
+
+nodePool: ""
+
 nodeSelector: {}
 nodeAffinity: {}
 tolerations:
@@ -20,10 +25,15 @@ tolerations:
   - key: CriticalAddonsOnly
     operator: Exists
 
+kubectl:
+  imageRegistry: ""
+  image: bitnami/kubectl
+  version: latest
+
 gardenlinux:
   imageRegistry: ghcr.io
   image: gardenlinux/gardenlinux/kmodbuild
-  version: amd64-1592.4
+  versionOverride: "" # ie amd64-1592.4
 
 nvidia:
   driverVersion: "550.127.08"
@@ -36,3 +46,10 @@ nvidia:
     version: 1.0.25-gke.56
     hostDevicePluginPath: /var/lib/kubelet/device-plugins
     resources: {}
+
+# mapping from the kernel version to the build image tag
+kernelVersions:
+  6.6.63-cloud-amd64: amd64-1592.4
+  6.6.62-cloud-amd64: amd64-1592.3
+  6.6.71-cloud-amd64: amd64-1592.5
+  6.6.78-cloud-amd64: amd64-1592.6

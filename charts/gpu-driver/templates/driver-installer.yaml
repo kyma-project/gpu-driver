@@ -3,6 +3,8 @@ kind: DaemonSet
 metadata:
   name: {{ template "gpu-driver.name" . }}
   namespace: {{ .Release.Namespace }}
+  labels:
+    gpu.kyma-project.io/kernel-version: {{ .Values.kernelVersion }}
 spec:
   updateStrategy:
     type: OnDelete
@@ -13,6 +15,7 @@ spec:
     metadata:
       labels:
         name: {{ template "gpu-driver.name" . }}
+        gpu.kyma-project.io/kernel-version: {{ .Values.kernelVersion }}
     spec:
       priorityClassName: system-node-critical
       {{- if .Values.nodeAffinity }}
@@ -21,14 +24,14 @@ spec:
 {{ toYaml .Values.nodeAffinity | indent 10 }}
       {{- end }}
       hostPID: true
-      imagePullSecrets: {{ template "image-pull-secrets"}}
+      imagePullSecrets: {{ template "image-pull-secrets" . }}
       containers:
       - name: gpu-driver
         {{- $imageUri := .Values.gardenlinux.image }}
         {{- if .Values.gardenlinux.imageRegistry }}
           {{ $imageUri = printf "%s/%s" .Values.gardenlinux.imageRegistry $imageUri }}
         {{- end }}
-        image: {{ $imageUri }}:{{ required "gardenlinux.version" .Values.gardenlinux.version }}
+        image: {{ $imageUri }}:{{ template "gardenlinux.version" . }}
         workingDir: "/work"
         command:
           - "/work/entrypoint.sh"
@@ -62,10 +65,7 @@ spec:
             mountPath: /opt/nvidia-installer/cache
           - name: module-install-dir-base
             mountPath: {{ required "nvidia.installer.hostDriverPath" .Values.nvidia.installer.hostDriverPath }}
-{{- if .Values.nodeSelector }}
-      nodeSelector:
-{{ toYaml .Values.nodeSelector | indent 8 }}
-{{- end }}
+      {{ template "node-selector" . }}
 {{- if .Values.tolerations }}
       tolerations:
 {{ toYaml .Values.tolerations | indent 6 }}
