@@ -2,6 +2,16 @@ apiVersion: v1
 entries:
   gpu-driver:
   - apiVersion: v2
+    appVersion: 0.3.0
+    created: "2025-02-20T19:54:11.78407886Z"
+    description: A Helm chart for Kubernetes
+    digest: fe77c917269a458e32b3deff49162374594ee98c267ca750535e121b4d3c938e
+    name: gpu-driver
+    type: application
+    urls:
+    - https://github.com/kyma-project/gpu-driver/releases/download/gpu-driver-0.3.0/gpu-driver-0.3.0.tgz
+    version: 0.3.0
+  - apiVersion: v2
     appVersion: 0.2.0
     created: "2025-02-14T10:18:02.420156502Z"
     description: A Helm chart for Kubernetes
@@ -21,4 +31,4 @@ entries:
     urls:
     - https://github.com/kyma-project/gpu-driver/releases/download/gpu-driver-0.1.0/gpu-driver-0.1.0.tgz
     version: 0.1.0
-generated: "2025-02-14T10:18:02.420165559Z"
+generated: "2025-02-20T19:54:11.784090671Z"
