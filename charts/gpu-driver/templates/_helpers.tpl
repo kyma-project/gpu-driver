@@ -16,17 +16,6 @@
 {{- end -}}
 
 
-{{- define "gardenlinux.version" -}}
-{{- if .Values.kernelVersion -}}
-{{- if not (hasKey .Values.kernelVersions .Values.kernelVersion) }}{{ fail (printf "Unknown kernel version '%s'" .Values.kernelVersion) }}{{ end -}}
-{{- get .Values.kernelVersions .Values.kernelVersion -}}
-{{- else if .Values.gardenlinux.versionOverride -}}
-{{- else -}}
-{{- fail ".kernelVersion or .gardenlinux.versionOverride must be set" -}}
-{{- end -}}
-{{- end -}}
-
-
 {{- define "image-pull-secrets" -}}
 {{- with .Values.imagePullSecrets }}
 {{- toYaml . | nindent 8 }}
@@ -36,13 +25,33 @@
 {{- end }}
 {{- end -}}
 
-{{- define "node-selector" -}}
-{{- $dict := .Values.nodeSelector }}
+{{- define "node-selector.no-kernel" -}}
+{{- $dict := merge .Values.nodeSelector dict }}
 {{- if .Values.nodePool -}}
 {{- $dict = set $dict "worker.gardener.cloud/pool" .Values.nodePool -}}
+{{- end -}}
+{{- $dict = unset $dict "gpu.kyma-project.io/kernel-version" -}}
+{{- if $dict -}}
+      nodeSelector:
+{{ toYaml $dict | indent 8 }}
+{{- else }}
+# no node selector
+{{- end -}}
+{{- end -}}
+
+
+{{- define "node-selector.with-kernel" -}}
+{{- $dict := merge .Values.nodeSelector dict }}
+{{- if .Values.nodePool -}}
+{{- $dict = set $dict "worker.gardener.cloud/pool" .Values.nodePool -}}
+{{- end -}}
+{{- if .Values.kernel -}}
+{{- $dict = set $dict "gpu.kyma-project.io/kernel-version" .Values.kernel -}}
 {{- end -}}
 {{- if $dict -}}
       nodeSelector:
 {{ toYaml $dict | indent 8 }}
+{{- else }}
+# no node selector
 {{- end -}}
 {{- end -}}

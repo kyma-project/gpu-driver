@@ -23,7 +23,7 @@ spec:
         nodeAffinity:
 {{  toYaml .Values.nodeAffinity | indent 10 }}
       {{- end}}
-      priorityClassName: system-node-critical
+      priorityClassName: system-cluster-critical
       volumes:
         - name: device-plugin
           hostPath:
@@ -59,10 +59,7 @@ spec:
               mountPath: /dev
             - mountPath: /usr/local/nvidia
               name: nvidia
-{{- if .Values.nodeSelector }}
-      nodeSelector:
-{{ toYaml .Values.nodeSelector | indent 8 }}
-{{- end }}
+      {{ template "node-selector.no-kernel" $ }}
 {{- if .Values.tolerations }}
       tolerations:
 {{ toYaml .Values.tolerations | indent 6 }}

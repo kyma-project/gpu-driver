@@ -17,13 +17,14 @@ fi
 log() {
   local NAME="kyma-gpu-driver"
   local MSG=$1
-  local TS=$(date '+%Y-%m-%d %H:%M:%S')
+  local TS
+  TS=$(date '+%Y-%m-%d %H:%M:%S')
   echo "${TS} ${NAME}: $MSG"
 }
 
-export KERNEL_NAME=$(./extract_kernel_name.sh ${KERNEL_TYPE} ${TARGET_ARCH})
+KERNEL_NAME=$(./extract_kernel_name.sh ${KERNEL_TYPE} ${TARGET_ARCH})
+export KERNEL_NAME
 
-COMPILED_FILENAME="${DRIVER_VERSION}"
 
 log "Compiling the GPU driver"
 

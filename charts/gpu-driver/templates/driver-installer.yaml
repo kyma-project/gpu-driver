@@ -1,45 +1,58 @@
+{{- range $kernel, $tag := .Values.kernelVersions }}
+{{- $safeKernel := ($kernel | replace "." "-") -}}
+{{- $valuesOverlay := dict "kernel" $kernel "safeKernel" $safeKernel -}}
+{{- $rootOverlay := dict "Values" $valuesOverlay -}}
+{{- $root := merge $rootOverlay $ }}
+---
+#
+# kernel: {{ $kernel }}
+# safeKernel {{ $safeKernel }}
+#
+#
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: {{ template "gpu-driver.name" . }}
-  namespace: {{ .Release.Namespace }}
+  name: {{ template "gpu-driver.name" $root }}-{{ $root.Values.safeKernel }}
+  namespace: {{ $root.Release.Namespace }}
   labels:
-    gpu.kyma-project.io/kernel-version: {{ .Values.kernelVersion }}
+    gpu.kyma-project.io/kernel-version: "{{ $root.Values.kernel }}"
+    gpu.kyma-project.io/build-image-version: "{{ $tag }}"
 spec:
   updateStrategy:
     type: OnDelete
   selector:
     matchLabels:
-      name: {{ template "gpu-driver.name" . }}
+      name: {{ template "gpu-driver.name" $root }}
   template:
     metadata:
       labels:
-        name: {{ template "gpu-driver.name" . }}
-        gpu.kyma-project.io/kernel-version: {{ .Values.kernelVersion }}
+        name: {{ template "gpu-driver.name" $root }}
+        gpu.kyma-project.io/kernel-version: "{{ $root.Values.kernel }}"
+        gpu.kyma-project.io/build-image-version: "{{ $tag }}"
     spec:
       priorityClassName: system-node-critical
-      {{- if .Values.nodeAffinity }}
+      {{- if $root.Values.nodeAffinity }}
       affinity:
         nodeAffinity:
-{{ toYaml .Values.nodeAffinity | indent 10 }}
+{{ toYaml $root.Values.nodeAffinity | indent 10 }}
       {{- end }}
       hostPID: true
-      imagePullSecrets: {{ template "image-pull-secrets" . }}
+      imagePullSecrets: {{ template "image-pull-secrets" $ }}
       containers:
       - name: gpu-driver
-        {{- $imageUri := .Values.gardenlinux.image }}
-        {{- if .Values.gardenlinux.imageRegistry }}
-          {{ $imageUri = printf "%s/%s" .Values.gardenlinux.imageRegistry $imageUri }}
+        {{- $imageUri := $root.Values.gardenlinux.image }}
+        {{- if $root.Values.gardenlinux.imageRegistry }}
+          {{ $imageUri = printf "%s/%s" $root.Values.gardenlinux.imageRegistry $imageUri }}
         {{- end }}
-        image: {{ $imageUri }}:{{ template "gardenlinux.version" . }}
+        image: {{ $imageUri }}:{{ $tag }}
         workingDir: "/work"
         command:
           - "/work/entrypoint.sh"
         securityContext:
           privileged: true
-{{- if .Values.nvidia.installer.resources }}
+{{- if $root.Values.nvidia.installer.resources }}
         resources:
-{{ toYaml .Values.nvidia.installer.resources | indent 12 }}
+{{ toYaml $root.Values.nvidia.installer.resources | indent 12 }}
 {{- end }}
         env:
           - name: KERNEL_TYPE
@@ -51,9 +64,9 @@ spec:
           - name: LD_ROOT
             value: /root
           - name: DEBUG
-            value: {{ .Values.debug | quote }}
+            value: {{ $root.Values.debug | quote }}
           - name: HOST_DRIVER_PATH
-            value: {{ .Values.nvidia.installer.hostDriverPath }}
+            value: {{ $root.Values.nvidia.installer.hostDriverPath }}
         volumeMounts:
           - name: gpu-driver
             mountPath: /work
@@ -64,16 +77,16 @@ spec:
           - name: module-cache
             mountPath: /opt/nvidia-installer/cache
           - name: module-install-dir-base
-            mountPath: {{ required "nvidia.installer.hostDriverPath" .Values.nvidia.installer.hostDriverPath }}
-      {{ template "node-selector" . }}
-{{- if .Values.tolerations }}
+            mountPath: {{ required "nvidia.installer.hostDriverPath" $root.Values.nvidia.installer.hostDriverPath }}
+      {{ template "node-selector.with-kernel" $root }}
+{{- if $root.Values.tolerations }}
       tolerations:
-{{ toYaml .Values.tolerations | indent 6 }}
+{{ toYaml $root.Values.tolerations | indent 6 }}
 {{- end }}
       volumes:
         - name: gpu-driver
           configMap:
-            name: {{ template "gpu-driver.name" . }}
+            name: {{ template "gpu-driver.name" $ }}
             defaultMode: 0744
         - name: dev
           hostPath:
@@ -86,4 +99,6 @@ spec:
             path: /opt/nvidia-installer/cache
         - name: module-install-dir-base
           hostPath:
-            path: {{ required "nvidia.installer.hostDriverPath" .Values.nvidia.installer.hostDriverPath }}
+            path: {{ required "nvidia.installer.hostDriverPath" $root.Values.nvidia.installer.hostDriverPath }}
+
+{{- end }}

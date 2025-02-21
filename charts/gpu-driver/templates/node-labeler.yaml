@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ template "node-labeler.name" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      name: {{ template "node-labeler.name" . }}
+  template:
+    metadata:
+      labels:
+        name: {{ template "node-labeler.name" . }}
+    spec:
+      priorityClassName: system-node-critical
+      imagePullSecrets: {{ template "image-pull-secrets"}}
+      containers:
+        - name: node-labeler
+          {{- $imageUri := .Values.kubectl.image }}
+          {{- if .Values.kubectl.imageRegistry }}
+            {{ $imageUri = printf "%s/%s" .Values.kubectl.imageRegistry $imageUri }}
+          {{- end }}
+          image: {{ $imageUri }}:{{ required "kubectl.version" .Values.kubectl.version }}
+          securityContext:
+            runAsUser: 65534
+            runAsGroup: 65534
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - "ALL"
+          workingDir: "/work"
+          command:
+            - "/work/node-labeler.sh"
+          env:
+            - name: NODENAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: gpu-driver
+              mountPath: /work
+      serviceAccountName: {{ template "rbac.name" . }}
+      volumes:
+        - name: gpu-driver
+          configMap:
+            name: {{ template "gpu-driver.name" . }}
+            defaultMode: 0777
+
