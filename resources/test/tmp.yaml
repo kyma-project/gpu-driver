@@ -1,0 +1,114 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-gpu-driver-installer-6-6-71-cloud-amd64-test
+  namespace: default
+spec:
+  volumes:
+    - name: gpu-driver
+      configMap:
+        name: gpu-driver-installer
+        defaultMode: 484
+    - name: dev
+      hostPath:
+        path: /dev
+        type: ''
+    - name: ld-root
+      hostPath:
+        path: /
+        type: ''
+    - name: module-cache
+      hostPath:
+        path: /opt/nvidia-installer/cache
+        type: ''
+    - name: module-install-dir-base
+      hostPath:
+        path: /opt/drivers
+        type: ''
+  containers:
+    - name: gpu-driver
+      image: ghcr.io/gardenlinux/gardenlinux/kmodbuild:amd64-1592.5
+      command:
+        - /work/entrypoint.sh
+      workingDir: /work
+      env:
+        - name: KERNEL_TYPE
+          value: cloud
+        - name: TARGET_ARCH
+          value: amd64
+        - name: DRIVER_VERSION
+          value: 550.127.08
+        - name: LD_ROOT
+          value: /root
+        - name: DEBUG
+          value: 'true'
+        - name: HOST_DRIVER_PATH
+          value: /opt/drivers
+        - name: KUBERNETES_SERVICE_HOST
+          value: api.mt-gpu2.spm-test01.internal.canary.k8s.ondemand.com
+      resources: {}
+      volumeMounts:
+        - name: gpu-driver
+          mountPath: /work
+        - name: dev
+          mountPath: /dev
+        - name: ld-root
+          mountPath: /root
+        - name: module-cache
+          mountPath: /opt/nvidia-installer/cache
+        - name: module-install-dir-base
+          mountPath: /opt/drivers
+      imagePullPolicy: IfNotPresent
+      securityContext:
+        privileged: true
+  restartPolicy: Always
+  hostPID: true
+  priorityClassName: system-node-critical
+
+
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-gpu-driver-device-plugin-test
+  namespace: default
+spec:
+  volumes:
+    - name: device-plugin
+      hostPath:
+        path: /var/lib/kubelet/device-plugins
+        type: ''
+    - name: dev
+      hostPath:
+        path: /dev
+        type: ''
+    - name: nvidia
+      hostPath:
+        path: /opt/nvidia-installer/cache/nvidia/550.127.08
+        type: Directory
+  containers:
+    - name: nvidia-gpu-device-plugin
+      image: gcr.io/gke-release/nvidia-gpu-device-plugin:1.0.25-gke.56
+      command:
+        - /usr/bin/nvidia-gpu-device-plugin
+        - '-logtostderr'
+        - '-host-path=/opt/drivers/nvidia'
+      env:
+        - name: LD_LIBRARY_PATH
+          value: /usr/local/nvidia/lib
+        - name: GOMAXPROCS
+          value: '1'
+        - name: KUBERNETES_SERVICE_HOST
+          value: api.mt-gpu2.spm-test01.internal.canary.k8s.ondemand.com
+      resources: {}
+      volumeMounts:
+        - name: device-plugin
+          mountPath: /device-plugin
+        - name: dev
+          mountPath: /dev
+        - name: nvidia
+          mountPath: /usr/local/nvidia
+      securityContext:
+        privileged: true
+  priorityClassName: system-node-critical

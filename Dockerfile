@@ -1,37 +1,33 @@
-# syntax=docker/dockerfile:1
-ARG REGISTRY_PATH=gardenlinux/kmodbuild
+# Build the manager binary
+FROM docker.io/golang:1.23 AS builder
+ARG TARGETOS
+ARG TARGETARCH
 
-FROM debian:bookworm-slim AS packager
-ARG TARGET_ARCH
-ARG DRIVER_VERSION
+WORKDIR /workspace
+# Copy the Go Modules manifests
+COPY go.mod go.mod
+COPY go.sum go.sum
+# cache deps before building and copying source so that we don't need to re-download as much
+# and so that source changes don't invalidate our downloaded layer
+RUN go mod download
 
-COPY resources/scripts/* /opt/nvidia-installer/
+# Copy the go source
+COPY cmd/main.go cmd/main.go
+COPY api/ api/
+COPY internal/ internal/
 
-RUN apt-get update && apt-get install --no-install-recommends -y \
-    kmod \
-    pciutils \
-    ca-certificates \
-    wget \
-    xz-utils
+# Build
+# the GOARCH has not a default value to allow the binary be built according to the host where the command
+# was called. For example, if we call make docker-build in a local env which has the Apple Silicon M1 SO
+# the docker BUILDPLATFORM arg will be linux/arm64 when for Apple x86 it will be linux/amd64. Therefore,
+# by leaving it empty we can ensure that the container and binary shipped on it will have the same platform.
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o manager cmd/main.go
 
- RUN rm -rf /var/lib/apt/lists/*
+# Use distroless as minimal base image to package the manager binary
+# Refer to https://github.com/GoogleContainerTools/distroless for more details
+FROM gcr.io/distroless/static:nonroot
+WORKDIR /
+COPY --from=builder /workspace/manager .
+USER 65532:65532
 
-RUN /opt/nvidia-installer/download_fabricmanager.sh
-
-# Remove several things that are not needed, some of which raise Black Duck scan vulnerabilities
-RUN apt-get remove -y --autoremove --allow-remove-essential --ignore-hold \
-      libgnutls30 apt openssl wget ncurses-base ncurses-bin
-
-RUN rm -rf /var/lib/apt/lists/* /usr/bin/dpkg /sbin/start-stop-daemon /usr/lib/x86_64-linux-gnu/libsystemd.so* \
-         /var/lib/dpkg/info/libdb5.3* /usr/lib/x86_64-linux-gnu/libdb-5.3.so* /usr/share/doc/libdb5.3 \
-         /usr/bin/chfn /usr/bin/gpasswd
-
-RUN mkdir -p /rootfs \
-        && cp -ar /bin /boot /etc /home /lib /lib64 /media /mnt /opt /root /run /sbin /srv /tmp /usr /var /rootfs \
-        && rm -rf /rootfs/opt/actions-runner
-
-FROM scratch
-
-COPY --from=packager /rootfs /
-
-ENTRYPOINT ["/opt/nvidia-installer/entrypoint.sh"]
+ENTRYPOINT ["/manager"]
