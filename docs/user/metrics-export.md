@@ -40,4 +40,4 @@ This guide gives you a heads up on how to get started.
 
 4. See the metrics coming in
    Get a monitoring setup in place based on scraping of workloads being annotated with prometheus annotations, for example using a `MetricPipeline` of the [Kyma Telemetry module](https://kyma-project.io/#/telemetry-manager/user/04-metrics?id=_4-activate-prometheus-based-metrics), maybe in combination with [Prometheus integration](https://kyma-project.io/#/telemetry-manager/user/integration/prometheus/README).
-   Then go to the related UI and check that metrics with names `xxx` are being ingested.
+   Then go to the related UI and check that metrics with names `DCGM_FI_DEV_GPU_UTIL` (GPU utilization (in %)) are being ingested.
