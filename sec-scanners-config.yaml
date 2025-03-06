@@ -2,3 +2,4 @@ module-name: gpu-driver
 kind: kyma
 bdba:
   - europe-docker.pkg.dev/kyma-project/prod/gpu-driver:550.127.08-amd64
+  - gcr.io/gke-release/nvidia-gpu-device-plugin:1.0.25-gke.56
