@@ -19,12 +19,10 @@ package main
 import (
 	"crypto/tls"
 	"flag"
-	"github.com/kyma-project/gpu-driver/internal/common/composed"
-	"github.com/kyma-project/gpu-driver/internal/config"
-	"github.com/kyma-project/gpu-driver/internal/process"
-	"github.com/kyma-project/gpu-driver/internal/util"
 	"os"
 	"path/filepath"
+
+	"github.com/kyma-project/gpu-driver/internal/common/composed"
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -40,6 +38,7 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
+	gpuv1beta1 "github.com/kyma-project/gpu-driver/api/v1beta1"
 	"github.com/kyma-project/gpu-driver/internal/controller"
 	// +kubebuilder:scaffold:imports
 )
@@ -52,6 +51,7 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
+	utilruntime.Must(gpuv1beta1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 
@@ -87,10 +87,6 @@ func main() {
 	}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
-
-	cfg := config.NewConfig(util.NewOSEnvironment())
-	process.InitConfig(cfg)
-	cfg.Read()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
@@ -219,10 +215,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controller.DriverReconciler{
+	if err = (&controller.NodeReconciler{
 		Cluster: composed.NewDefaultStateClusterFromCluster(mgr),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Guestbook")
+		os.Exit(1)
+	}
+	if err = (&controller.GpuDriverReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GpuDriver")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

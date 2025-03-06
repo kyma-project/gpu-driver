@@ -6,7 +6,7 @@ import (
 )
 
 func StopIfNotLoaded(ctx context.Context, st composed.State) (context.Context, error) {
-	if composed.IsLoaded()(ctx) {
+	if composed.IsLoaded(ctx) {
 		return ctx, nil
 	}
 

@@ -2,8 +2,34 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: gpu-driver-operator
+  name: manager-role
 rules:
+- apiGroups:
+  - gpu.kyma-project.io
+  resources:
+  - gpudrivers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - gpu.kyma-project.io
+  resources:
+  - gpudrivers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - gpu.kyma-project.io
+  resources:
+  - gpudrivers/status
+  verbs:
+  - get
+  - patch
+  - update
 - apiGroups:
   - v1
   resources:

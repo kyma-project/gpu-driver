@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: system
+  name: scripts
+  labels:
+    app.kubernetes.io/name: gpu-driver-installer
+    app.kubernetes.io/part-of: gpu-driver

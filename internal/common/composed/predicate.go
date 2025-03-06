@@ -12,11 +12,9 @@ func Not(p Predicate) Predicate {
 	}
 }
 
-func IsLoaded() Predicate {
-	return func(ctx context.Context) bool {
-		state := StateFromCtx[State](ctx)
-		return state.Obj() != nil && state.Obj().GetName() != "" && state.Obj().GetGeneration() > 0
-	}
+func IsLoaded(ctx context.Context) bool {
+	state := StateFromCtx[State](ctx)
+	return state.Obj() != nil && state.Obj().GetName() != "" && state.Obj().GetGeneration() > 0
 }
 
 // All returns a Predicate composed of many given predicates that

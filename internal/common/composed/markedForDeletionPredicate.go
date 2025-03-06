@@ -1,17 +1,18 @@
 package composed
 
 import (
+	"context"
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func IsMarkedForDeletion(obj client.Object) bool {
 	if obj == nil {
-		return false
+		return true
 	}
 	val := reflect.ValueOf(obj)
 	if val.IsNil() {
-		return false
+		return true
 	}
 	if obj.GetDeletionTimestamp() == nil {
 		return false
@@ -20,4 +21,11 @@ func IsMarkedForDeletion(obj client.Object) bool {
 		return false
 	}
 	return true
+}
+
+var _ Predicate = MarkForDeletionPredicate
+
+func MarkForDeletionPredicate(ctx context.Context) bool {
+	state := StateFromCtx[State](ctx)
+	return IsMarkedForDeletion(state.Obj())
 }
