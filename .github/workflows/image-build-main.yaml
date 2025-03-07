@@ -16,6 +16,6 @@ jobs:
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
     with:
       tags: ${{ github.ref_name }}
-      name: cloud-manager
+      name: gpu-driver
       dockerfile: Dockerfile
       export-tags: true
