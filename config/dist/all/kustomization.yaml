@@ -27,11 +27,21 @@ resources:
 replacements:
   - source:
       kind: ServiceAccount
-      name: gpu-driver-installer
+      name: gpu-driver-manager
       fieldPath: .metadata.namespace
     targets:
       - select:
           kind: ClusterRoleBinding
           name: gpu-driver-installer
+        fieldPaths:
+          - .subjects.0.namespace
+      - select:
+          kind: RoleBinding
+          name: gpu-driver-leader-election-rolebinding
+        fieldPaths:
+          - .subjects.0.namespace
+      - select:
+          kind: ClusterRoleBinding
+          name: gpu-driver-manager-rolebinding
         fieldPaths:
           - .subjects.0.namespace

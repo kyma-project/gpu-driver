@@ -4,13 +4,11 @@ metadata:
   name: manager
   namespace: system
   labels:
-    control-plane: controller-manager
     app.kubernetes.io/name: gpu-driver
     app.kubernetes.io/managed-by: kustomize
 spec:
   selector:
     matchLabels:
-      control-plane: controller-manager
       app.kubernetes.io/name: gpu-driver
   replicas: 1
   template:
@@ -18,7 +16,6 @@ spec:
       annotations:
         kubectl.kubernetes.io/default-container: manager
       labels:
-        control-plane: controller-manager
         app.kubernetes.io/name: gpu-driver
     spec:
       # TODO(user): Uncomment the following code to configure the nodeAffinity expression

@@ -4,6 +4,7 @@ kind: ClusterRole
 metadata:
   name: installer
   labels:
+    app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/name: gpu-driver-installer
     app.kubernetes.io/part-of: gpu-driver
 rules:

@@ -1,9 +1,11 @@
-name: Cloud-Manager Build Image
+name: GPU Driver Build Image
 
 on:
   push:
     branches:
       - main
+    tags:
+      - "*"
 
 permissions:
   id-token: write # This is required for requesting the JWT token
@@ -11,17 +13,9 @@ permissions:
 
 jobs:
   build-image:
-    strategy:
-      matrix:
-        arch: ["amd64"]
-        driver_version: ["550.127.08"]
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
     with:
-      tags: |
-        main-${{ matrix.driver_version }}-${{ matrix.arch }}
-      name: gpu-driver
+      tags: ${{ github.ref_name }}
+      name: cloud-manager
       dockerfile: Dockerfile
       export-tags: true
-      build-args: |
-        TARGET_ARCH=${{ matrix.arch }}
-        DRIVER_VERSION=${{ matrix.driver_version }}

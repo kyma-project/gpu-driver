@@ -3,7 +3,6 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   labels:
-    control-plane: controller-manager
     app.kubernetes.io/name: gpu-driver
     app.kubernetes.io/managed-by: kustomize
   name: gpu-driver-operator-metrics-monitor
@@ -23,5 +22,4 @@ spec:
         insecureSkipVerify: true
   selector:
     matchLabels:
-      control-plane: controller-manager
       app.kubernetes.io/name: gpu-driver
