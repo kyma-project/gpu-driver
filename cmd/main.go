@@ -19,7 +19,10 @@ package main
 import (
 	"crypto/tls"
 	"flag"
+	"fmt"
+	"github.com/kyma-project/gpu-driver/internal/config"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/kyma-project/gpu-driver/internal/common/composed"
@@ -87,6 +90,12 @@ func main() {
 	}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
+
+	if err := initConfig(); err != nil {
+		setupLog.Error(err, "failed to initialize config")
+		os.Exit(1)
+		return
+	}
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
@@ -222,8 +231,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controller.GpuDriverReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Cluster: composed.NewDefaultStateClusterFromCluster(mgr),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GpuDriver")
 		os.Exit(1)
@@ -260,4 +268,13 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+}
+
+func initConfig() error {
+	dir, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("could not determine working directory: %w", err)
+	}
+	dir = path.Join(dir, "config")
+	return config.Initialize(dir)
 }

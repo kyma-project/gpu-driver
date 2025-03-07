@@ -3,7 +3,7 @@ package node
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/gpu-driver/api/v1beta1"
+	gpuv1beta1 "github.com/kyma-project/gpu-driver/api/v1beta1"
 	"github.com/kyma-project/gpu-driver/internal/common/composed"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -23,9 +23,10 @@ func NewStateToCtx(ctx context.Context) context.Context {
 type State struct {
 	composed.State
 
-	KernelVersion   string
-	GpuDriverConfig *v1beta1.GpuDriver
-	DriverVersion   string
+	KernelVersion      string
+	AllMatchingConfigs []*gpuv1beta1.GpuDriver
+	GpuDriverConfig    *gpuv1beta1.GpuDriver
+	DriverVersion      string
 
 	ID  string
 	Job *batchv1.Job

@@ -15,11 +15,11 @@ const (
 )
 
 func NewDefaultStateClusterFromCluster(cluster cluster.Cluster) StateCluster {
-	return NewStateCluster(DefaultClusterID, cluster.GetClient(), cluster.GetAPIReader(), cluster.GetEventRecorderFor("cloud-manager"), cluster.GetScheme())
+	return NewStateCluster(DefaultClusterID, cluster.GetClient(), cluster.GetAPIReader(), cluster.GetEventRecorderFor("gpu-driver"), cluster.GetScheme())
 }
 
 func NewStateClusterFromCluster(id string, cluster cluster.Cluster) StateCluster {
-	return NewStateCluster(id, cluster.GetClient(), cluster.GetAPIReader(), cluster.GetEventRecorderFor("cloud-manager"), cluster.GetScheme())
+	return NewStateCluster(id, cluster.GetClient(), cluster.GetAPIReader(), cluster.GetEventRecorderFor("gpu-driver"), cluster.GetScheme())
 }
 
 func NewStateCluster(

@@ -39,7 +39,7 @@ func (f *k8sFakePort) findNoLock(name types.NamespacedName, obj client.Object) (
 	if err != nil {
 		return nil, schema.GroupVersionKind{}, err
 	}
-	key := fmt.Sprintf("%s/%s", gvk.Group, gvk.Kind, name)
+	key := fmt.Sprintf("%s/%s/%s", gvk.Group, gvk.Kind, name)
 	arr := f.objects[key]
 	for _, o := range arr {
 		if o.GetName() == name.Name && o.GetNamespace() == name.Namespace {

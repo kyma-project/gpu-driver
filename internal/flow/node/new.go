@@ -14,6 +14,7 @@ func New() composed.Action {
 		return composed.ComposeActions(
 			actions.LoadObjStopIfNotFound,
 			nodeDetectKernelVersion,
+			nodeFindAllMatchingConfigs,
 			nodeFindGpuDriverConfig,
 			stopIfNodeDeletingOrUnschedulable,
 			composed.If(
@@ -21,8 +22,8 @@ func New() composed.Action {
 				driverPodLoad,
 				driverPodCreate,
 				driverPodWaitComplete,
-				nodeLabelWithDriverVersion,
 				driverPodDelete,
+				nodeLabelDriverInstalled,
 			),
 		)(ctx)
 	}

@@ -15,25 +15,24 @@ import (
 func nodeFindGpuDriverConfig(ctx context.Context) (context.Context, error) {
 	state := composed.StateFromCtx[*State](ctx)
 
-	allMatching := config.FindNodeConfigs(state.ObjAsNode())
 	assignedGpuDriverName := state.ObjAsNode().Labels[flow.LabelGpuDriverConfig]
 
-	if len(allMatching) == 0 {
+	if len(state.AllMatchingConfigs) == 0 {
 		// ignore the node, it matches to none existing GpuDriver
 		return ctx, composed.StopAndForget
 	}
 
 	// assume GpuDriver selectors do not overlap, and node matches to only one
-	gpuDriver := allMatching[0]
+	gpuDriver := state.AllMatchingConfigs[0]
 
 	k8s := k8sport.FromCtxDefaultCluster(ctx)
 
-	if len(allMatching) > 1 && assignedGpuDriverName == "" {
+	if len(state.AllMatchingConfigs) > 1 && assignedGpuDriverName == "" {
 		// The node matches to multiple GpuDriver configs,
 		// but it has not already been assigned to some
 		// * choose assumed first (maybe later change to oldest)
 		// * emit an event
-		matchingNames := pie.Map(allMatching, func(x *gpuv1beta1.GpuDriver) string {
+		matchingNames := pie.Map(state.AllMatchingConfigs, func(x *gpuv1beta1.GpuDriver) string {
 			return x.Name
 		})
 		k8s.AnnotatedEventf(
@@ -44,13 +43,13 @@ func nodeFindGpuDriverConfig(ctx context.Context) (context.Context, error) {
 			fmt.Sprintf("Multiple GpuDriver configurations match single node"),
 		)
 	}
-	if len(allMatching) > 1 && assignedGpuDriverName != "" {
+	if len(state.AllMatchingConfigs) > 1 && assignedGpuDriverName != "" {
 		// The node matches to multiple GpuDriver configs,
 		// but it already was assigned to some
 
 		// Find if already assigned GpuDriver config still exists
 		gpuDriver = nil
-		for _, gpu := range allMatching {
+		for _, gpu := range state.AllMatchingConfigs {
 			if gpu.Namespace == assignedGpuDriverName {
 				gpuDriver = gpu
 			}
@@ -87,7 +86,10 @@ func nodeFindGpuDriverConfig(ctx context.Context) (context.Context, error) {
 
 	state.GpuDriverConfig = gpuDriver
 
-	state.DriverVersion = gpuDriver.Spec.DriverVersion
+	state.DriverVersion = state.ObjAsNode().Labels[flow.LabelDriverVersion]
+	if state.DriverVersion == "" {
+		state.DriverVersion = gpuDriver.Spec.DriverVersion
+	}
 	if state.DriverVersion == "" {
 		state.DriverVersion = config.KernelToDriver(state.KernelVersion)
 	}

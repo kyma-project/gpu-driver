@@ -13,6 +13,10 @@ const (
 	LabelDevicePlugin    = "gpu.kyma-project.io/device-plugin"
 )
 
+const (
+	AnnotationNodeNock = "gpu.kyma-project.io/nock"
+)
+
 var (
 	fabricManagerGpuRegex = regexp.MustCompile("(A100|H100|H200|B100|B200)")
 )

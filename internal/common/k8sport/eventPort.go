@@ -47,5 +47,5 @@ func (p *k8sEventPortImpl) Eventf(ctx context.Context, object client.Object, eve
 
 func (p *k8sEventPortImpl) AnnotatedEventf(ctx context.Context, object client.Object, annotations map[string]string, eventtype, reason, messageFmt string, args ...interface{}) {
 	cluster := composed.ClusterFromCtx(ctx, p.clusterID)
-	cluster.EventRecorder().Eventf(object, eventtype, reason, messageFmt, args...)
+	cluster.EventRecorder().AnnotatedEventf(object, annotations, eventtype, reason, messageFmt, args...)
 }

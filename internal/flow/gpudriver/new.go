@@ -19,6 +19,7 @@ func New() composed.Action {
 			),
 			composed.If(
 				shouldCreateDaemonset,
+				nodeNock,
 				devicePluginDsCreate,
 			),
 		)(ctx)

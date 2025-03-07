@@ -12,7 +12,6 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func driverPodCreate(ctx context.Context) (context.Context, error) {
@@ -111,6 +110,14 @@ func driverPodCreate(ctx context.Context) (context.Context, error) {
 						},
 					},
 				},
+				{
+					Name: "usr-local",
+					VolumeSource: corev1.VolumeSource{
+						HostPath: &corev1.HostPathVolumeSource{
+							Path: "/usr/local",
+						},
+					},
+				},
 			},
 			ServiceAccountName: config.GetInstallerServiceAccountName(),
 			Containers: []corev1.Container{
@@ -160,7 +167,7 @@ func driverPodCreate(ctx context.Context) (context.Context, error) {
 							Value: "/root",
 						},
 						{
-							Name:  "HOST_DRIVER_PATH",
+							Name:  "INSTALL_DIR",
 							Value: "/opt/drivers",
 						},
 					},
@@ -185,6 +192,10 @@ func driverPodCreate(ctx context.Context) (context.Context, error) {
 							Name:      "module-install-dir-base",
 							MountPath: "/opt/drivers",
 						},
+						{
+							Name:      "usr-local",
+							MountPath: "/usr/local",
+						},
 					},
 				},
 			},
@@ -196,7 +207,7 @@ func driverPodCreate(ctx context.Context) (context.Context, error) {
 	if apierrors.IsAlreadyExists(err) {
 		return ctx, composed.StopWithRequeue
 	}
-	if client.IgnoreAlreadyExists(err) != nil {
+	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error creating pod", composed.StopWithRequeue, ctx)
 	}
 

@@ -18,21 +18,16 @@ package controller
 
 import (
 	"context"
-	"github.com/kyma-project/gpu-driver/internal/config"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-
-	"k8s.io/apimachinery/pkg/runtime"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
-
 	gpuv1beta1 "github.com/kyma-project/gpu-driver/api/v1beta1"
+	"github.com/kyma-project/gpu-driver/internal/common/composed"
+	"github.com/kyma-project/gpu-driver/internal/common/k8sport"
+	"github.com/kyma-project/gpu-driver/internal/flow/gpudriver"
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 // GpuDriverReconciler reconciles a GpuDriver object
 type GpuDriverReconciler struct {
-	client.Client
-	Scheme *runtime.Scheme
+	Cluster composed.StateCluster
 }
 
 // +kubebuilder:rbac:groups=gpu.kyma-project.io,resources=gpudrivers,verbs=get;list;watch;create;update;patch;delete
@@ -40,21 +35,25 @@ type GpuDriverReconciler struct {
 // +kubebuilder:rbac:groups=gpu.kyma-project.io,resources=gpudrivers/finalizers,verbs=update
 
 func (r *GpuDriverReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	ctx = composed.InitState(ctx, req.NamespacedName, &gpuv1beta1.GpuDriver{})
+	ctx = composed.ClusterToCtx(ctx, r.Cluster)
+	ctx = k8sport.ToCtx(ctx, k8sport.NewK8sPortOnDefaultCluster())
+	act := gpudriver.New()
+	return composed.Handle(act(ctx))
 
-	gpuDriver := &gpuv1beta1.GpuDriver{}
-	err := r.Get(ctx, req.NamespacedName, gpuDriver)
-	if apierrors.IsNotFound(err) {
-		config.Remove(req.Name)
-		return ctrl.Result{}, nil
-	}
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	config.Sync(gpuDriver)
-
-	return ctrl.Result{}, nil
+	//gpuDriver := &gpuv1beta1.GpuDriver{}
+	//err := r.Get(ctx, req.NamespacedName, gpuDriver)
+	//if apierrors.IsNotFound(err) {
+	//	config.Remove(req.Name)
+	//	return ctrl.Result{}, nil
+	//}
+	//if err != nil {
+	//	return ctrl.Result{}, err
+	//}
+	//
+	//config.Sync(gpuDriver)
+	//
+	//return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

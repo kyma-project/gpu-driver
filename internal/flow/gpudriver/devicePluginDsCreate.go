@@ -70,8 +70,8 @@ func devicePluginDsCreate(ctx context.Context) (context.Context, error) {
 								HostPath: &corev1.HostPathVolumeSource{
 									// expecting that once driver is installed in
 									// /opt/nvidia-installer/cache/nvidia/$DRIVER_VERSION
-									// it is symlinked to /usr/local/nvidia
-									Path: "/usr/local/nvidia",
+									// it is symlinked to /opt/drivers/nvidia as that was set in $INSTALL_DIR
+									Path: "/opt/drivers/nvidia",
 								},
 							},
 						},

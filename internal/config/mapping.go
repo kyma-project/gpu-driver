@@ -32,19 +32,21 @@ const defaultDriverVersion = "550.127.08"
 
 var defaultDriverVersions = map[string]string{}
 
-func Initialize(dir string) error {
+func Initialize(dirs ...string) error {
 	cfg = viper.New()
 	cfg.SetConfigName("config")
 	cfg.SetConfigType("yaml")
-	cfg.AddConfigPath(dir)
-	cfg.AddConfigPath("/opt/gpu-driver/config")
+	for _, dir := range dirs {
+		cfg.AddConfigPath(dir)
+	}
+	cfg.AddConfigPath("/opt/kyma/gpu-driver/config")
 
 	cfg.SetDefault(keyKmodbuildVersions, defaultKmodbuildVersions)
 	cfg.SetDefault(keyDefaultDriverVersion, defaultDriverVersions)
 	cfg.SetDefault(keyDefaultDriverVersion, defaultDriverVersion)
 
 	err := cfg.ReadInConfig()
-	if err != nil {
+	if err == nil {
 		cfg.WatchConfig()
 	}
 

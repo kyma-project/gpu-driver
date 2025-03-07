@@ -11,7 +11,7 @@ fi
 : "${TARGET_ARCH:?Argument TARGET_ARCH needs to be set and non-empty.}"
 : "${KERNEL_NAME:?Argument KERNEL_NAME needs to be set and non-empty.}"
 : "${DRIVER_VERSION:?Argument DRIVER_VERSION needs to be set and non-empty.}"
-: "${HOST_DRIVER_PATH:?Argument HOST_DRIVER_PATH needs to be set and non-empty.}"
+: "${INSTALL_DIR:?Argument INSTALL_DIR needs to be set and non-empty.}"
 : "${NODE_NAME:?Argument NODE_NAME needs to be set and non-empty.}"
 
 LABEL_GPU_NAME="${LABEL_GPU_NAME:-gpu.kyma-project.io/gpu-name}"
@@ -102,12 +102,7 @@ fi
 NVIDIA_ROOT="${NVIDIA_ROOT:-/opt/nvidia-installer/cache/nvidia/$DRIVER_VERSION}"
 LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-$NVIDIA_ROOT/lib}"
 
-if [ ! -e /usr/local/nvidia ]; then
-  # Device plugin needs this, so we're linking all driver versions to one same dir
-  echo "Symlink /usr/local/nvidia to $NVIDIA_ROOT"
-  ln -s /usr/local/nvidia $NVIDIA_ROOT
-fi
-
+echo "INSTALL_DIR: $INSTALL_DIR"
 echo "NVIDIA_ROOT: $NVIDIA_ROOT"
 echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
