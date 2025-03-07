@@ -1,0 +1,19 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: installer
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: gpu-driver-installer
+    app.kubernetes.io/part-of: gpu-driver
+rules:
+- apiGroups: [""]
+  resources:
+    - nodes
+  verbs:
+    - get
+    - list
+    - watch
+    - update
+    - patch

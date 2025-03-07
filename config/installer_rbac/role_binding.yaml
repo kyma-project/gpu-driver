@@ -1,0 +1,16 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: installer
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: gpu-driver-installer
+    app.kubernetes.io/part-of: gpu-driver
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: gpu-driver-installer
+subjects:
+- kind: ServiceAccount
+  name: gpu-driver-installer
+  namespace: system

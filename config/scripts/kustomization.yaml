@@ -1,0 +1,21 @@
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+  - name: scripts
+    files:
+      - fabricmanager_entrypoint.sh
+      - installer_entrypoint.sh
+      - gardenlinux/resources/compile.sh
+      - gardenlinux/resources/download_fabricmanager.sh
+      - gardenlinux/resources/extract_kernel_name.sh
+      - gardenlinux/resources/install.sh
+      - gardenlinux/resources/install_fabricmanager.sh
+      - gardenlinux/resources/load_install_gpu_driver.sh
+      - gardenlinux/resources/set_env_vars.sh
+
+patches:
+  - path: configmap.yaml
+    target:
+      kind: ConfigMap

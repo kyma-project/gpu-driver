@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: gpu-driver-device-plugin
+  namespace: default
+  labels:
+    app: gpu-driver-device-plugin
+spec:
+  selector:
+    matchLabels:
+      name: gpu-driver-device-plugin
+  template:
+    metadata:
+      labels:
+        name: gpu-driver-device-plugin
+    spec:
+      priorityClassName: system-cluster-critical
+      volumes:
+        - name: device-plugin
+          hostPath:
+            path: /var/lib/kubelet/device-plugins
+        - name: dev
+          hostPath:
+            path: /dev
+        - hostPath:
+            path: /opt/nvidia-installer/cache/nvidia/550.127.08
+            type: Directory
+          name: nvidia
+      containers:
+        - name: nvidia-gpu-device-plugin
+          image: gcr.io/gke-release/nvidia-gpu-device-plugin:1.0.25-gke.56
+          command:
+            - "/usr/bin/nvidia-gpu-device-plugin"
+            - "-logtostderr"
+            - "-host-path=/opt/drivers/nvidia"
+          env:
+            - name: LD_LIBRARY_PATH
+              value: /usr/local/nvidia/lib
+            - name: GOMAXPROCS
+              value: '1'
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: device-plugin
+              mountPath: /device-plugin
+            - name: dev
+              mountPath: /dev
+            - mountPath: /usr/local/nvidia
+              name: nvidia
+      tolerations:
+        - key: "" # An empty key with operator Exists matches all keys, values and effects which means this will tolerate everything.
+          operator: Exists
+          effect: NoSchedule
+        - key: ""
+          operator: Exists
+          effect: NoExecute
+        - key: CriticalAddonsOnly
+          operator: Exists
+  updateStrategy:
+    type: RollingUpdate

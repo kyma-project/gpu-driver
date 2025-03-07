@@ -1,0 +1,64 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: gpu-driver
+rules:
+- apiGroups:
+  - gpu.kyma-project.io
+  resources:
+  - gpudrivers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - gpu.kyma-project.io
+  resources:
+  - gpudrivers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - gpu.kyma-project.io
+  resources:
+  - gpudrivers/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - v1
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - v1
+  resources:
+  - nodes/status
+  - pods/status
+  verbs:
+  - get
+- apiGroups:
+  - v1
+  resources:
+  - pods
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch

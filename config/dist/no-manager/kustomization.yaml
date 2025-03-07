@@ -1,0 +1,33 @@
+# Adds namespace to all resources.
+namespace: gpu-driver-system
+
+# Value of this field is prepended to the
+# names of all resources, e.g. a deployment named
+# "wordpress" becomes "alices-wordpress".
+# Note that it should also match with the prefix (text before '-') of the namespace
+# field above.
+namePrefix: gpu-driver-
+
+# Labels to add to all resources and selectors.
+#labels:
+#- includeSelectors: true
+#  pairs:
+#    someName: someValue
+
+resources:
+- ../../namespace
+- ../../crd
+- ../../scripts
+- ../../installer_rbac
+
+replacements:
+  - source:
+      kind: ServiceAccount
+      name: gpu-driver-installer
+      fieldPath: .metadata.namespace
+    targets:
+      - select:
+          kind: ClusterRoleBinding
+          name: gpu-driver-installer
+        fieldPaths:
+          - .subjects.0.namespace

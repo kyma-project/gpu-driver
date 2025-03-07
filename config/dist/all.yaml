@@ -1,0 +1,819 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: gpu-driver
+  name: gpu-driver-system
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.17.1
+  name: gpudrivers.gpu.kyma-project.io
+spec:
+  group: gpu.kyma-project.io
+  names:
+    kind: GpuDriver
+    listKind: GpuDriverList
+    plural: gpudrivers
+    singular: gpudriver
+  scope: Cluster
+  versions:
+  - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: GpuDriver is the Schema for the gpudrivers API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: GpuDriverSpec defines the desired state of GpuDriver.
+            properties:
+              devicePlugin:
+                properties:
+                  enabled:
+                    default: true
+                    type: boolean
+                  image:
+                    default: gke-release/nvidia-gpu-device-plugin
+                    type: string
+                  imagePullPolicy:
+                    default: IfNotPresent
+                    description: PullPolicy describes a policy for if/when to pull
+                      a container image
+                    type: string
+                  imagePullSecrets:
+                    items:
+                      type: string
+                    type: array
+                  repository:
+                    default: gcr.io
+                    type: string
+                  version:
+                    default: 1.0.25-gke.56
+                    type: string
+                type: object
+              driverVersion:
+                type: string
+              installer:
+                properties:
+                  image:
+                    default: gardenlinux/gardenlinux/kmodbuild
+                    type: string
+                  imagePullPolicy:
+                    default: IfNotPresent
+                    description: PullPolicy describes a policy for if/when to pull
+                      a container image
+                    type: string
+                  imagePullSecrets:
+                    items:
+                      type: string
+                    type: array
+                  repository:
+                    default: ghcr.io
+                    type: string
+                type: object
+              nodeSelector:
+                additionalProperties:
+                  type: string
+                type: object
+            required:
+            - nodeSelector
+            type: object
+          status:
+            description: GpuDriverStatus defines the observed state of GpuDriver.
+            properties:
+              conditions:
+                items:
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
+                  properties:
+                    lastTransitionTime:
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                        This may be an empty string.
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                        Producers of specific condition types may define expected values and meanings for this field,
+                        and whether the values are considered a guaranteed API.
+                        The value should be a CamelCase string.
+                        This field may not be empty.
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      description: status of the condition, one of True, False, Unknown.
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
+              state:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: gpu-driver-installer
+    app.kubernetes.io/part-of: gpu-driver
+  name: gpu-driver-installer
+  namespace: gpu-driver-system
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: gpu-driver
+  name: gpu-driver-manager
+  namespace: gpu-driver-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: gpu-driver
+  name: gpu-driver-leader-election-role
+  namespace: gpu-driver-system
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: gpu-driver-installer
+    app.kubernetes.io/part-of: gpu-driver
+  name: gpu-driver-installer
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: gpu-driver
+  name: gpu-driver-manager-role
+rules:
+- apiGroups:
+  - gpu.kyma-project.io
+  resources:
+  - gpudrivers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - gpu.kyma-project.io
+  resources:
+  - gpudrivers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - gpu.kyma-project.io
+  resources:
+  - gpudrivers/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - v1
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - v1
+  resources:
+  - nodes/status
+  - pods/status
+  verbs:
+  - get
+- apiGroups:
+  - v1
+  resources:
+  - pods
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: gpu-driver
+  name: gpu-driver-leader-election-rolebinding
+  namespace: gpu-driver-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: gpu-driver-leader-election-role
+subjects:
+- kind: ServiceAccount
+  name: gpu-driver-operator
+  namespace: gpu-driver-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: gpu-driver-installer
+    app.kubernetes.io/part-of: gpu-driver
+  name: gpu-driver-installer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: gpu-driver-installer
+subjects:
+- kind: ServiceAccount
+  name: gpu-driver-installer
+  namespace: gpu-driver-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: gpu-driver
+  name: gpu-driver-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: gpu-driver-operator
+subjects:
+- kind: ServiceAccount
+  name: gpu-driver-operator
+  namespace: gpu-driver-system
+---
+apiVersion: v1
+data:
+  compile.sh: "#!/bin/bash\nif [ -z \"$DRIVER_VERSION\" ]; then\n    echo \"Error:
+    DRIVER_VERSION is not set.\"\n    exit 1\nfi\nif [ -z \"$KERNEL_NAME\" ]; then\n
+    \   echo \"Error: KERNEL_NAME is not set.\"\n    exit 1\nfi\n\necho \"Compiling
+    NVIDIA modules for driver version $DRIVER_VERSION on kernel $KERNEL_NAME\"\n\nset
+    -x\nmkdir -p /tmp/nvidia\n\nif [ -z \"$TARGET_ARCH\" ]; then\n    echo \"Error:
+    TARGET_ARCH is not set.\"\n    exit 1\nfi\n\ndeclare -A arch_translation\narch_translation=([\"amd64\"]=\"x86_64\"
+    [\"arm64\"]=\"aarch64\")\n\nif [[ ! ${arch_translation[$TARGET_ARCH]+_} ]]; then\n
+    \   echo \"Error: Unsupported TARGET_ARCH value.\"\n    exit 2\nfi\nARCH_TYPE=${arch_translation[$TARGET_ARCH]}\n\n\n#
+    shellcheck disable=SC2164\npushd /tmp/nvidia\nDRIVER_URL=\"https://uk.download.nvidia.com/tesla/$DRIVER_VERSION/NVIDIA-Linux-$ARCH_TYPE-$DRIVER_VERSION.run\"\nif
+    ! curl -Ls \"${DRIVER_URL}\" -o nvidia.run ; then\n  echo \"Failed to download
+    ${DRIVER_URL}\"\n  exit 1\nfi\nchmod +x nvidia.run\n./nvidia.run -x -s\n\n# shellcheck
+    disable=SC2164\npushd \"./NVIDIA-Linux-$ARCH_TYPE-$DRIVER_VERSION\"\nexport IGNORE_MISSING_MODULE_SYMVERS=1\nOUTDIR=\"/out/nvidia/$DRIVER_VERSION\"\n\ncase
+    $TARGET_ARCH in\n    amd64)\n      if ./nvidia-installer \\\n          --no-opengl-files
+    \\\n          --no-libglx-indirect \\\n          --no-install-libglvnd \\\n          --kernel-name=\"$KERNEL_NAME\"
+    \\\n          --no-drm \\\n          --no-install-compat32-libs \\\n          --no-opengl-files
+    \\\n          --ui=none --no-questions \\\n          --no-kernel-module-source
+    \\\n          --no-systemd \\\n          --skip-depmod \\\n          --log-file-name=\"$PWD\"/nvidia-installer.log
+    \\\n          --utility-prefix=\"$OUTDIR\" \\\n          --utility-libdir=lib
+    \\\n          --kernel-install-path=\"$OUTDIR\"/lib/modules/\"$KERNEL_NAME\" \\\n
+    \       && test -e \"$OUTDIR\"/lib/modules/\"$KERNEL_NAME\"/nvidia.ko\n      then\n
+    \       echo \"Successfully compiled NVIDIA modules\"\n      else \n        echo
+    \"[ERROR] Failed to compile NVIDIA modules\"\n        cat \"$PWD\"/nvidia-installer.log\n
+    \       exit 1\n      fi\n        ;;\n    arm64)\n      if ./nvidia-installer
+    \\\n          --no-opengl-files \\\n          --no-libglx-indirect \\\n          --no-install-libglvnd
+    \\\n          --kernel-name=\"$KERNEL_NAME\" \\\n          --no-drm \\\n          --no-opengl-files
+    \\\n          --no-kernel-module-source \\\n          --ui=none --no-questions
+    \\\n          --no-systemd \\\n          --skip-depmod \\\n          --log-file-name=\"$PWD\"/nvidia-installer.log
+    \\\n          --utility-prefix=\"$OUTDIR\" \\\n          --utility-libdir=lib
+    \\\n          --kernel-install-path=\"$OUTDIR\"/lib/modules/\"$KERNEL_NAME\" \\\n
+    \       && test -e \"$OUTDIR\"/lib/modules/\"$KERNEL_NAME\"/nvidia.ko\n      then\n
+    \       echo \"Successfully compiled NVIDIA modules\"\n      else \n        echo
+    \"[ERROR] Failed to compile NVIDIA modules\"\n        cat /tmp/nvidia/NVIDIA-Linux-aarch64-\"$DRIVER_VERSION\"/nvidia-installer.log\n
+    \       cat \"$PWD\"/nvidia-installer.log\n\n        exit 1\n      fi\n        ;;\n
+    \   *)\n        echo \"Unsupported architecture\"\n        exit 3\n        ;;\nesac\n\necho
+    \"Archiving assets\"\n\n# Archive library .so files\ncp /usr/lib/\"$ARCH_TYPE\"-linux-gnu/*nvidia*
+    /usr/lib/\"$ARCH_TYPE\"-linux-gnu/*cuda* \"$OUTDIR\"/lib\n\n# We don't need the
+    installer binaries, or the icons/desktop files in /share\nrm -rf \"$OUTDIR\"/bin/*install*
+    \"$OUTDIR\"/share\n\n# shellcheck disable=SC2046\ntar czf \"$OUTDIR\".tar.gz --directory
+    $(dirname \"$OUTDIR\") $(basename \"$OUTDIR\") && rm -rf \"$OUTDIR\"\n"
+  download_fabricmanager.sh: |+
+    #!/bin/bash
+    echo "Downloading NVIDIA fabric manager for driver version $DRIVER_VERSION"
+    set -x
+    DRIVER_BRANCH=$(echo "$DRIVER_VERSION" | grep -oE '^[0-9]+')
+    if [ -z "$TARGET_ARCH" ]; then
+        echo "Error: TARGET_ARCH is not set."
+        exit 1
+    fi
+
+    declare -A arch_translation
+    arch_translation=(["amd64"]="x86_64" ["arm64"]="aarch64")
+
+    if [[ ! ${arch_translation[$TARGET_ARCH]+_} ]]; then
+        echo "Error: Unsupported TARGET_ARCH value."
+        exit 2
+    fi
+
+    mkdir -p /tmp/nvidia
+
+    # shellcheck disable=SC2164
+    pushd /tmp/nvidia
+
+    # Download Fabric Manager tarball
+    wget -O /tmp/keyring.deb https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb && dpkg -i /tmp/keyring.deb
+    apt-get update
+    apt-get install -V nvidia-fabricmanager-"$DRIVER_BRANCH"="$DRIVER_VERSION"-1
+
+  extract_kernel_name.sh: |
+    #!/bin/bash
+
+    # This helper script assumes you have the garden linux repository in your /etc/apt/sources.list configured
+    #
+    # This script checks the /usr/src folder for linux-headers-* folders and then figure out the right one to use
+
+    kernel_type=$1
+    if [ "${kernel_type}" == "cloud" ]; then
+      grep_args="cloud"
+    else
+      grep_args="-v cloud"
+    fi
+
+    kernel_arch=$2
+    # shellcheck disable=SC2010,SC2086
+    #                List the linux-headers folders for the arch & kernel type ------------------- | Sort by line length (shortest first) ---------------- | Pick the first line
+    kernel_headers=$(ls /usr/src | grep "linux-headers-" | grep "${kernel_arch}" | grep $grep_args | awk '{ print length, $0 }' | sort -n | cut -d" " -f2- | head -n 1)
+
+    kernel_name=${kernel_headers//linux-headers-/}
+
+    echo "$kernel_name"
+  fabricmanager_entrypoint.sh: |
+    #!/usr/bin/env bash
+
+    set -euo pipefail
+
+    : "${DRIVER_VERSION:?Argument DRIVER_VERSION needs to be set and non-empty.}"
+    : "${TARGET_ARCH:?Argument TARGET_ARCH needs to be set and non-empty.}"
+
+    DRIVER_BRANCH=$(echo "$DRIVER_VERSION" | grep -oE '^[0-9]+')
+
+    declare -A arch_translation
+    arch_translation=(["amd64"]="x86_64" ["arm64"]="aarch64")
+
+    if [[ ! ${arch_translation[$TARGET_ARCH]+_} ]]; then
+        echo "Error: Unsupported TARGET_ARCH value."
+        exit 2
+    fi
+
+
+    mkdir -p /tmp/nvidia
+
+    # shellcheck disable=SC2164
+    pushd /tmp/nvidia
+
+    install_packages ca-certificates wget
+
+    # Download Fabric Manager tarball
+    wget -O /tmp/keyring.deb https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb && dpkg -i /tmp/keyring.deb
+    apt-get update -qq
+    apt-get install -y --no-install-recommends -V nvidia-fabricmanager-"$DRIVER_BRANCH"="$DRIVER_VERSION"-1
+
+    rm -r /var/lib/apt/lists /var/cache/apt/archives
+  install.sh: |-
+    #!/bin/bash
+    echo "Installing NVIDIA modules for driver version $DRIVER_VERSION"
+    set -e
+
+    error_out=$(depmod -b "$INSTALL_DIR/$DRIVER_NAME" 2>&1)
+    # "grep -v ..." removes warnings that do not cause a problem for the gpu driver installation
+    echo "$error_out" | grep -v 'depmod: WARNING:' || true
+
+    modprobe -q -d "$INSTALL_DIR/$DRIVER_NAME" nvidia
+    modprobe -q -d "$INSTALL_DIR/$DRIVER_NAME" nvidia-uvm
+    if [ ! -e /dev/nvidia0 ] ; then
+        NVDEVS=$(lspci | grep -i NVIDIA)
+        N3D=$(echo "$NVDEVS" | grep -c "3D controller") || true
+        NVGA=$(echo "$NVDEVS" | grep -c "VGA compatible controller") || true
+        N=$((N3D + NVGA - 1)) || true
+        for i in $(seq 0 $N); do mknod -m 666 /dev/nvidia"$i" c 195 "$i"; done
+    fi
+    if [ ! -e /dev/nvidiactl ] ; then
+        mknod -m 666 /dev/nvidiactl c 195 255
+    fi
+    if [ ! -e /dev/nvidia-uvm ] ; then
+        D=$(grep nvidia-uvm /proc/devices | cut -d " " -f 1)
+        mknod -m 666 /dev/nvidia-uvm c "$D" 0
+    fi
+
+    # For A100 GPUs we install additional device files to support Fabric Manager
+    GPU_NAME=$("${NVIDIA_BIN}"/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader)
+    if [[ "$GPU_NAME" == *"A100"* ]]; then
+      "${NVIDIA_BIN}"/nvidia-modprobe --unified-memory --nvlink
+      "${NVIDIA_BIN}"/nvidia-modprobe --nvswitch -c 0
+      "${NVIDIA_BIN}"/nvidia-modprobe --nvswitch -c 1
+      "${NVIDIA_BIN}"/nvidia-modprobe --nvswitch -c 2
+      "${NVIDIA_BIN}"/nvidia-modprobe --nvswitch -c 3
+      "${NVIDIA_BIN}"/nvidia-modprobe --nvswitch -c 4
+      "${NVIDIA_BIN}"/nvidia-modprobe --nvswitch -c 5
+    fi
+
+    echo "NVIDIA driver installed OK"
+  install_fabricmanager.sh: |-
+    #!/bin/bash
+
+    export DEBUG=${DEBUG:-false}
+
+    if ${DEBUG}; then
+      set -x
+    fi
+
+    BIN_DIR=${BIN_DIR:-/opt/nvidia-installer}
+    # shellcheck disable=SC1090
+    source "$BIN_DIR"/set_env_vars.sh
+
+    GPU_NAME=$("${NVIDIA_ROOT}"/bin/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader)
+
+    # Typical GPU name is something like "NVIDIA H100 80GB HBM3"
+    # Fabric manager is required by the newer, bigger GPUs like A100, H100, etc. so we match those GPU types here
+    if [[ "$GPU_NAME" =~ (A100|H100|H200|B100|B200) ]]; then
+      sed 's/DAEMONIZE=1/DAEMONIZE=0/g' "/usr/share/nvidia/nvswitch/fabricmanager.cfg" > /etc/fabricmanager.cfg
+      sed -i 's/LOG_FILE_NAME=.*$/LOG_FILE_NAME=/g' /etc/fabricmanager.cfg
+
+      # Run Fabric Manager
+      nv-fabricmanager -c /etc/fabricmanager.cfg
+    fi
+    echo "Sleep infinity"
+    sleep infinity
+  installer_entrypoint.sh: |+
+    #!/usr/bin/env bash
+
+    set -euo pipefail
+
+    if ${DEBUG}; then
+      set -x
+      env
+    fi
+
+    : "${KERNEL_TYPE:?Argument KERNEL_TYPE needs to be set and non-empty.}"
+    : "${TARGET_ARCH:?Argument TARGET_ARCH needs to be set and non-empty.}"
+    : "${KERNEL_NAME:?Argument KERNEL_NAME needs to be set and non-empty.}"
+    : "${DRIVER_VERSION:?Argument DRIVER_VERSION needs to be set and non-empty.}"
+    : "${INSTALL_DIR:?Argument INSTALL_DIR needs to be set and non-empty.}"
+    : "${NODE_NAME:?Argument NODE_NAME needs to be set and non-empty.}"
+
+    LABEL_GPU_NAME="${LABEL_GPU_NAME:-gpu.kyma-project.io/gpu-name}"
+
+    log() {
+      set +x
+      local NAME="kyma-gpu-driver"
+      local MSG=$1
+      local TS
+      TS=$(date '+%Y-%m-%d %H:%M:%S')
+      echo "${TS} ${NAME}: $MSG"
+      if ${DEBUG}; then
+        set -x
+      fi
+    }
+
+    log "GPU driver installer entrypoint"
+
+    find /dev -name "nvidia*"
+
+    SHOULD_INSTALL=true
+
+    DEVICE_EXISTS=false
+    if [ -e /dev/nvidia0 ] && [ -e /dev/nvidiactl ] && [ -e /dev/nvidia-uvm ]; then
+      DEVICE_EXISTS=true
+    fi
+
+    if [ "$DEVICE_EXISTS" = true ]; then
+      SHOULD_INSTALL=false
+      NVIDIA_ROOT="${NVIDIA_ROOT:-/opt/nvidia-installer/cache/nvidia/$DRIVER_VERSION}"
+      export NVIDIA_ROOT
+      LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-$NVIDIA_ROOT/lib}"
+      export LD_LIBRARY_PATH
+
+      echo $NVIDIA_ROOT
+      echo $LD_LIBRARY_PATH
+
+      GPU_NAME=$(/opt/nvidia-installer/cache/nvidia/550.127.08/bin/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
+
+      # NVIDIA-SMI has failed
+      if [[ $GPU_NAME == *"NVIDIA-SMI"* ]]; then
+        echo "$GPU_NAME"
+        echo "Reinstalling the driver"
+        find /dev -name "nvidia*"
+        find /dev -name "nvidia*" -exec rm -rf {} \;
+        SHOULD_INSTALL=true
+      else
+        echo "Detected GPU device name: $GPU_NAME"
+      fi
+    fi
+
+    if [ "$SHOULD_INSTALL" = false ]; then
+
+      log "GPU driver already installed"
+
+    else
+
+      log "Compiling the GPU driver"
+
+      ./compile.sh
+
+      ls -la /out
+      ls -la /out/nvidia
+
+
+      log "Installing dependency packages"
+
+      apt-get update && apt-get install --no-install-recommends -y \
+          kmod \
+          pciutils \
+          ca-certificates \
+          wget \
+          curl \
+          xz-utils \
+          && rm -rf /var/lib/apt/lists/*
+
+      log "Installing GPU driver"
+
+      mkdir -p /opt/nvidia-installer
+      cp ./*.sh /opt/nvidia-installer
+
+      source /opt/nvidia-installer/load_install_gpu_driver.sh
+
+    fi
+
+
+
+    NVIDIA_ROOT="${NVIDIA_ROOT:-/opt/nvidia-installer/cache/nvidia/$DRIVER_VERSION}"
+    LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-$NVIDIA_ROOT/lib}"
+
+    echo "INSTALL_DIR: $INSTALL_DIR"
+    echo "NVIDIA_ROOT: $NVIDIA_ROOT"
+    echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+
+    GPU_NAME=$(/opt/nvidia-installer/cache/nvidia/550.127.08/bin/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
+
+    echo "GPU_NAME=$GPU_NAME"
+
+    cd /opt/nvidia-installer
+
+    echo "Downloading kubectl"
+
+    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+
+    chmod +x ./kubectl
+
+    GPU_NAME_LABEL="${GPU_NAME// /-}"
+
+    echo "Labeling node $NODE_NAME with $LABEL_GPU_NAME = $GPU_NAME_LABEL"
+
+    ./kubectl label node $NODE_NAME $LABEL_GPU_NAME="$GPU_NAME_LABEL" --overwrite
+
+
+    if ${DEBUG}; then
+      echo "Entrypoint sleep infinity"
+      sleep infinity
+    fi
+
+  load_install_gpu_driver.sh: "#!/bin/bash\necho \"nvidia-installer begins\"\nset
+    -e\n\nBIN_DIR=${BIN_DIR:-/opt/nvidia-installer}\n# shellcheck disable=SC1090\nsource
+    \"$BIN_DIR\"/set_env_vars.sh\nLD_ROOT=${LD_ROOT:-/}\n\nmain() {\n    parse_parameters
+    \"${@}\"\n\n    trap post_process EXIT\n\n    if ${DEBUG}; then\n      set -x\n
+    \   fi\n\n    check_status \"${DRIVER_NAME}\" \"${DRIVER_VERSION}\" && exit 0\n\n
+    \   driver_cached=$(driver_in_cache \"${DRIVER_NAME}\" \"${DRIVER_VERSION}\")\n\n
+    \   if ! ${driver_cached}; then\n      mkdir -p \"${CACHE_DIR}\"/\"${DRIVER_NAME}\"\n
+    \     tar xzf /out/\"${DRIVER_NAME}\"/\"${DRIVER_VERSION}\".tar.gz -C \"${CACHE_DIR}\"/\"${DRIVER_NAME}\"\n
+    \   fi\n\n    NVIDIA_BIN=\"${NVIDIA_ROOT}/bin\"\n    install \"$DRIVER_NAME\"
+    \"$DRIVER_VERSION\" \"$NVIDIA_BIN\"\n\n    if ! \"${NVIDIA_BIN}/nvidia-smi\";
+    then\n        echo \"[ERROR] driver installation failed. Could not run nvidia-smi.\"\n
+    \       exit 1\n    fi\n\n}\n\ncheck_status() {\n    local DRIVER_NAME=$1\n    local
+    DRIVER_VERSION=$2\n    # Check to see if /dev/nvidia0 exists already - this means
+    that a previous driver version already exists,\n    #  in which case we don't
+    want to overwrite with a conflicting new version\n    if [ -e /dev/nvidia0 ] &&
+    [ -e /dev/nvidiactl ] && [ -e /dev/nvidia-uvm ]; then\n      echo \"[INFO] /dev/nvidia*
+    files exist - driver version $(ls \"${CACHE_DIR}\"/\"${DRIVER_NAME}\") already
+    installed\"\n      return 0\n    fi\n\n    echo \"$DRIVER_NAME $DRIVER_VERSION
+    is out of date\" 1>&2\n    return 1;\n}\n\ndriver_in_cache() {\n    local DRIVER_NAME=$1\n
+    \   local DRIVER_VERSION=$2\n    # shellcheck disable=SC2155\n    local KERNEL_NAME=$(uname
+    -r)\n    if [ -d \"${CACHE_DIR}/${DRIVER_NAME}/${DRIVER_VERSION}/lib/modules/${KERNEL_NAME}\"
+    ]; then\n        echo \"true\"\n    fi\n    echo \"false\"\n}\n\ninstall() {\n
+    \   local DRIVER_NAME=$1\n    local DRIVER_VERSION=$2\n    local NVIDIA_BIN=$3\n\n
+    \   mkdir -p \"${INSTALL_DIR}\"\n    rm -rf \"${INSTALL_DIR:?}/${DRIVER_NAME}\"\n
+    \   ln -s \"${CACHE_DIR}/${DRIVER_NAME}/${DRIVER_VERSION}\" \"${INSTALL_DIR}/${DRIVER_NAME}\"\n\n
+    \   if [ -d \"${INSTALL_DIR}/${DRIVER_NAME}/lib\" ] ; then\n        mkdir -p \"${LD_ROOT}/etc/ld.so.conf.d\"\n
+    \       echo \"${INSTALL_DIR}/${DRIVER_NAME}/lib\" \\\n            > \"${LD_ROOT}/etc/ld.so.conf.d/${DRIVER_NAME}.conf\"\n
+    \       ldconfig -r \"${LD_ROOT}\" 2> /dev/null\n    fi\n    # shellcheck disable=SC1090\n
+    \   source \"${BIN_DIR}/install.sh\"\n}\n\nprint_menu() {\n    printf '%s is a
+    tool for automatically installing (and potentially compiling) gpu drivers on gardenlinux
+    nodes.\\n\\n' \"$(basename \"$0\")\"\n    printf 'Usage:\\n\\n \\t %s [options]\\n\\n'
+    \"$(basename \"$0\")\"\n    printf 'The options are:\\n\\n'\n\n    echo \"       |
+    --debug                  Debug flag for more noisy logging.\"\n    echo \"  -h
+    \  | --help                   Prints the help\"\n    echo \"\"\n}\n\nparse_parameters()
+    {\n\n  while [ \"$#\" -gt 0 ]\n  do\n    case \"$1\" in\n    -h|--help)\n      print_menu\n
+    \     exit 0\n      ;;\n    --debug)\n      export DEBUG=\"true\"\n      ;;\n
+    \   --)\n      break\n      ;;\n    -*)\n      echo \"Invalid option '$1'. Use
+    --help to see the valid options\" >&2\n      exit 1\n      ;;\n    *)  \n      break\n
+    \     ;;\n    esac\n    shift\n  done\n}\n\ncheck_required() {\n    if [ -z \"${!2}\"
+    ]; then\n      print_menu\n      error \"${1} \\\"${2}\\\" is not set\"\n    fi\n}\n\nerror()
+    {\n  echo -e \"\\033[1;31m[-] [ERROR]: $*\\033[0m\";\n  exit 1\n}\n\nlog() {\n
+    \ echo -e \"\\033[1;32m[+]: $*\\033[0m\"\n}\n\npost_process() {\n    if ${DEBUG};
+    then\n        echo \"LoadInstallGpuDriver post_process\"\n        #sleep infinity\n
+    \   fi\n}\n\nmain \"${@}\""
+  set_env_vars.sh: |-
+    #!/bin/bash
+    export CACHE_DIR=${CACHE_DIR:-$BIN_DIR/cache}
+    export INSTALL_DIR=${INSTALL_DIR:-/opt/drivers}
+    export DEBUG=${DEBUG:-false}
+    export DRIVER_NAME=nvidia
+    # Look for a file <driver version>.tar.gz and remove the .tar.gz to get the driver version
+    # shellcheck disable=SC2155,SC2012
+    export DRIVER_VERSION=$(ls /out/nvidia | sed 's/.tar.gz//')
+    export NVIDIA_ROOT="${CACHE_DIR}/${DRIVER_NAME}/${DRIVER_VERSION}"
+    export LD_LIBRARY_PATH="${NVIDIA_ROOT}/lib"
+
+    if [ -z "$TARGET_ARCH" ]; then
+      ARCH_TYPE=$(uname -m)
+    else
+      declare -A arch_translation
+      arch_translation=(["amd64"]="x86_64" ["arm64"]="aarch64")
+      ARCH_TYPE=${arch_translation[$TARGET_ARCH]}
+    fi
+    export ARCH_TYPE
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: gpu-driver-installer
+    app.kubernetes.io/part-of: gpu-driver
+  name: gpu-driver-scripts
+  namespace: gpu-driver-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: gpu-driver
+  name: gpu-driver-manager
+  namespace: gpu-driver-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gpu-driver
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+      labels:
+        app.kubernetes.io/name: gpu-driver
+    spec:
+      containers:
+      - args:
+        - --leader-elect
+        - --health-probe-bind-address=:8081
+        command:
+        - /manager
+        image: controller:latest
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: manager
+        ports: []
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+          requests:
+            cpu: 10m
+            memory: 64Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts: []
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: gpu-driver-operator
+      terminationGracePeriodSeconds: 10
+      volumes: []

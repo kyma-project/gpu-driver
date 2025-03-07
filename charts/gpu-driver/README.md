@@ -34,7 +34,7 @@ kubectl get nodes -o jsonpath="{range .items[*]}{.metadata.labels.worker\.garden
 ```
 
 
-### 2. Find the kernel version of the nodes in the choosen node pool
+### 2. Find the kernel version of the nodes in the chosen node pool
 
 ```shell
 KERNEL_VERSION=$(kubectl get nodes -l worker.gardener.cloud/pool=$NODE_POOL \
