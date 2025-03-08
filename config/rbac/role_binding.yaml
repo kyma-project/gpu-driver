@@ -8,8 +8,8 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: gpu-driver-operator
+  name: manager-role
 subjects:
 - kind: ServiceAccount
-  name: gpu-driver-operator
+  name: manager
   namespace: system

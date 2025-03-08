@@ -23,6 +23,18 @@ resources:
 # additions
 - ../../rbac
 - ../../manager
+- ../../config
+
+patches:
+  - path: config-patch.yaml
+    target:
+      kind: Deployment
+
+
+images:
+  - name: controller
+    newName: europe-docker.pkg.dev/kyma-project/prod/gpu-driver
+    newTag: v20250308-9d13dbc8
 
 replacements:
   - source:

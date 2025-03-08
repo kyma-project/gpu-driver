@@ -33,6 +33,7 @@ type GpuDriverReconciler struct {
 // +kubebuilder:rbac:groups=gpu.kyma-project.io,resources=gpudrivers,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=gpu.kyma-project.io,resources=gpudrivers/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=gpu.kyma-project.io,resources=gpudrivers/finalizers,verbs=update
+// +kubebuilder:rbac:groups=apps,resources=daemonsets,verbs=get;list;watch;create;update;patch;delete
 
 func (r *GpuDriverReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	ctx = composed.InitState(ctx, req.NamespacedName, &gpuv1beta1.GpuDriver{})

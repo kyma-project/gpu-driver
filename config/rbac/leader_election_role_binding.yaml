@@ -11,5 +11,5 @@ roleRef:
   name: leader-election-role
 subjects:
 - kind: ServiceAccount
-  name: gpu-driver-operator
+  name: manager
   namespace: system

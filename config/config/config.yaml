@@ -1,0 +1,9 @@
+kmodbuildVersions:
+  "6.6.62-cloud-amd64": "amd64-1592.3"
+  "6.6.63-cloud-amd64": "amd64-1592.4"
+  "6.6.71-cloud-amd64": "amd64-1592.5"
+  "6.6.78-cloud-amd64": "amd64-1592.6"
+
+driverVersions: {}
+
+defaultDriverVersion: "550.127.08"

@@ -51,9 +51,14 @@ spec:
         args:
           - --leader-elect
           - --health-probe-bind-address=:8081
-        image: controller:latest
+        image: controller
         name: manager
         ports: []
+        env:
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -82,5 +87,5 @@ spec:
             memory: 64Mi
         volumeMounts: []
       volumes: []
-      serviceAccountName: gpu-driver-operator
+      serviceAccountName: manager
       terminationGracePeriodSeconds: 10
