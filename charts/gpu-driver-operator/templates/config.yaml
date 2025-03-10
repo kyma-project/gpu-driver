@@ -1,0 +1,18 @@
+apiVersion: v1
+data:
+  config.yaml: |
+    kmodbuildVersions:
+      "6.6.62-cloud-amd64": "amd64-1592.3"
+      "6.6.63-cloud-amd64": "amd64-1592.4"
+      "6.6.71-cloud-amd64": "amd64-1592.5"
+      "6.6.78-cloud-amd64": "amd64-1592.6"
+
+    driverVersions: {}
+
+    defaultDriverVersion: "550.127.08"
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: '{{ template "chart.fullname" . }}'
+  name: '{{ template "chart.fullname" . }}-config'
+  namespace: '{{ template "chart.fullname" . }}-system'

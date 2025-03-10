@@ -1,0 +1,162 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/name: '{{ template "chart.fullname" . }}'
+  name: '{{ template "chart.fullname" . }}-manager'
+  namespace: '{{ template "chart.fullname" . }}-system'
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/name: '{{ template "chart.fullname" . }}'
+  name: '{{ template "chart.fullname" . }}-leader-election-role'
+  namespace: '{{ template "chart.fullname" . }}-system'
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: '{{ template "chart.fullname" . }}-manager-role'
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - nodes/status
+      - pods/status
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - daemonsets
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - gpu.kyma-project.io
+    resources:
+      - gpudrivers
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - gpu.kyma-project.io
+    resources:
+      - gpudrivers/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - gpu.kyma-project.io
+    resources:
+      - gpudrivers/status
+    verbs:
+      - get
+      - patch
+      - update
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/name: '{{ template "chart.fullname" . }}'
+  name: '{{ template "chart.fullname" . }}-leader-election-rolebinding'
+  namespace: '{{ template "chart.fullname" . }}-system'
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: gpu-driver-leader-election-role
+subjects:
+  - kind: ServiceAccount
+    name: gpu-driver-manager
+    namespace: gpu-driver-system
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/name: '{{ template "chart.fullname" . }}'
+  name: '{{ template "chart.fullname" . }}-manager-rolebinding'
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: '{{ template "chart.fullname" . }}-manager-role'
+subjects:
+  - kind: ServiceAccount
+    name: '{{ template "chart.fullname" . }}-manager'
+    namespace: '{{ template "chart.fullname" . }}-system'

@@ -1,14 +1,747 @@
 apiVersion: v1
+data:
+  compile.sh: >
+    #!/bin/bash
+
+    if [ -z "$DRIVER_VERSION" ]; then
+        echo "Error: DRIVER_VERSION is not set."
+        exit 1
+    fi
+
+    if [ -z "$KERNEL_NAME" ]; then
+        echo "Error: KERNEL_NAME is not set."
+        exit 1
+    fi
+
+
+    echo "Compiling NVIDIA modules for driver version $DRIVER_VERSION on kernel
+    $KERNEL_NAME"
+
+
+    set -x
+
+    mkdir -p /tmp/nvidia
+
+
+    if [ -z "$TARGET_ARCH" ]; then
+        echo "Error: TARGET_ARCH is not set."
+        exit 1
+    fi
+
+
+    declare -A arch_translation
+
+    arch_translation=(["amd64"]="x86_64" ["arm64"]="aarch64")
+
+
+    if [[ ! ${arch_translation[$TARGET_ARCH]+_} ]]; then
+        echo "Error: Unsupported TARGET_ARCH value."
+        exit 2
+    fi
+
+    ARCH_TYPE=${arch_translation[$TARGET_ARCH]}
+
+
+
+    # shellcheck disable=SC2164
+
+    pushd /tmp/nvidia
+
+    DRIVER_URL="https://uk.download.nvidia.com/tesla/$DRIVER_VERSION/NVIDIA-Linux-$ARCH_TYPE-$DRIVER_VERSION.run"
+
+    if ! curl -Ls "${DRIVER_URL}" -o nvidia.run ; then
+      echo "Failed to download ${DRIVER_URL}"
+      exit 1
+    fi
+
+    chmod +x nvidia.run
+
+    ./nvidia.run -x -s
+
+
+    # shellcheck disable=SC2164
+
+    pushd "./NVIDIA-Linux-$ARCH_TYPE-$DRIVER_VERSION"
+
+    export IGNORE_MISSING_MODULE_SYMVERS=1
+
+    OUTDIR="/out/nvidia/$DRIVER_VERSION"
+
+
+    case $TARGET_ARCH in
+        amd64)
+          if ./nvidia-installer \
+              --no-opengl-files \
+              --no-libglx-indirect \
+              --no-install-libglvnd \
+              --kernel-name="$KERNEL_NAME" \
+              --no-drm \
+              --no-install-compat32-libs \
+              --no-opengl-files \
+              --ui=none --no-questions \
+              --no-kernel-module-source \
+              --no-systemd \
+              --skip-depmod \
+              --log-file-name="$PWD"/nvidia-installer.log \
+              --utility-prefix="$OUTDIR" \
+              --utility-libdir=lib \
+              --kernel-install-path="$OUTDIR"/lib/modules/"$KERNEL_NAME" \
+            && test -e "$OUTDIR"/lib/modules/"$KERNEL_NAME"/nvidia.ko
+          then
+            echo "Successfully compiled NVIDIA modules"
+          else 
+            echo "[ERROR] Failed to compile NVIDIA modules"
+            cat "$PWD"/nvidia-installer.log
+            exit 1
+          fi
+            ;;
+        arm64)
+          if ./nvidia-installer \
+              --no-opengl-files \
+              --no-libglx-indirect \
+              --no-install-libglvnd \
+              --kernel-name="$KERNEL_NAME" \
+              --no-drm \
+              --no-opengl-files \
+              --no-kernel-module-source \
+              --ui=none --no-questions \
+              --no-systemd \
+              --skip-depmod \
+              --log-file-name="$PWD"/nvidia-installer.log \
+              --utility-prefix="$OUTDIR" \
+              --utility-libdir=lib \
+              --kernel-install-path="$OUTDIR"/lib/modules/"$KERNEL_NAME" \
+            && test -e "$OUTDIR"/lib/modules/"$KERNEL_NAME"/nvidia.ko
+          then
+            echo "Successfully compiled NVIDIA modules"
+          else 
+            echo "[ERROR] Failed to compile NVIDIA modules"
+            cat /tmp/nvidia/NVIDIA-Linux-aarch64-"$DRIVER_VERSION"/nvidia-installer.log
+            cat "$PWD"/nvidia-installer.log
+
+            exit 1
+          fi
+            ;;
+        *)
+            echo "Unsupported architecture"
+            exit 3
+            ;;
+    esac
+
+
+    echo "Archiving assets"
+
+
+    # Archive library .so files
+
+    cp /usr/lib/"$ARCH_TYPE"-linux-gnu/*nvidia*
+    /usr/lib/"$ARCH_TYPE"-linux-gnu/*cuda* "$OUTDIR"/lib
+
+
+    # We don't need the installer binaries, or the icons/desktop files in /share
+
+    rm -rf "$OUTDIR"/bin/*install* "$OUTDIR"/share
+
+
+    # shellcheck disable=SC2046
+
+    tar czf "$OUTDIR".tar.gz --directory $(dirname "$OUTDIR") $(basename
+    "$OUTDIR") && rm -rf "$OUTDIR"
+  download_fabricmanager.sh: >+
+    #!/bin/bash
+
+    echo "Downloading NVIDIA fabric manager for driver version $DRIVER_VERSION"
+
+    set -x
+
+    DRIVER_BRANCH=$(echo "$DRIVER_VERSION" | grep -oE '^[0-9]+')
+
+    if [ -z "$TARGET_ARCH" ]; then
+        echo "Error: TARGET_ARCH is not set."
+        exit 1
+    fi
+
+
+    declare -A arch_translation
+
+    arch_translation=(["amd64"]="x86_64" ["arm64"]="aarch64")
+
+
+    if [[ ! ${arch_translation[$TARGET_ARCH]+_} ]]; then
+        echo "Error: Unsupported TARGET_ARCH value."
+        exit 2
+    fi
+
+
+    mkdir -p /tmp/nvidia
+
+
+    # shellcheck disable=SC2164
+
+    pushd /tmp/nvidia
+
+
+    # Download Fabric Manager tarball
+
+    wget -O /tmp/keyring.deb
+    https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb
+    && dpkg -i /tmp/keyring.deb
+
+    apt-get update
+
+    apt-get install -V nvidia-fabricmanager-"$DRIVER_BRANCH"="$DRIVER_VERSION"-1
+
+  extract_kernel_name.sh: >
+    #!/bin/bash
+
+
+    # This helper script assumes you have the garden linux repository in your
+    /etc/apt/sources.list configured
+
+    #
+
+    # This script checks the /usr/src folder for linux-headers-* folders and
+    then figure out the right one to use
+
+
+    kernel_type=$1
+
+    if [ "${kernel_type}" == "cloud" ]; then
+      grep_args="cloud"
+    else
+      grep_args="-v cloud"
+    fi
+
+
+    kernel_arch=$2
+
+    # shellcheck disable=SC2010,SC2086
+
+    #                List the linux-headers folders for the arch & kernel type
+    ------------------- | Sort by line length (shortest first) ----------------
+    | Pick the first line
+
+    kernel_headers=$(ls /usr/src | grep "linux-headers-" | grep "${kernel_arch}"
+    | grep $grep_args | awk '{ print length, $0 }' | sort -n | cut -d" " -f2- |
+    head -n 1)
+
+
+    kernel_name=${kernel_headers//linux-headers-/}
+
+
+    echo "$kernel_name"
+  fabricmanager_entrypoint.sh: >
+    #!/usr/bin/env bash
+
+
+    set -euo pipefail
+
+
+    : "${DRIVER_VERSION:?Argument DRIVER_VERSION needs to be set and
+    non-empty.}"
+
+    : "${TARGET_ARCH:?Argument TARGET_ARCH needs to be set and non-empty.}"
+
+
+    DRIVER_BRANCH=$(echo "$DRIVER_VERSION" | grep -oE '^[0-9]+')
+
+
+    declare -A arch_translation
+
+    arch_translation=(["amd64"]="x86_64" ["arm64"]="aarch64")
+
+
+    if [[ ! ${arch_translation[$TARGET_ARCH]+_} ]]; then
+        echo "Error: Unsupported TARGET_ARCH value."
+        exit 2
+    fi
+
+
+
+    mkdir -p /tmp/nvidia
+
+
+    # shellcheck disable=SC2164
+
+    pushd /tmp/nvidia
+
+
+    install_packages ca-certificates wget
+
+
+    # Download Fabric Manager tarball
+
+    wget -O /tmp/keyring.deb
+    https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb
+    && dpkg -i /tmp/keyring.deb
+
+    apt-get update -qq
+
+    apt-get install -y --no-install-recommends -V
+    nvidia-fabricmanager-"$DRIVER_BRANCH"="$DRIVER_VERSION"-1
+
+
+    rm -r /var/lib/apt/lists /var/cache/apt/archives
+  install.sh: >-
+    #!/bin/bash
+
+    echo "Installing NVIDIA modules for driver version $DRIVER_VERSION"
+
+    set -e
+
+
+    error_out=$(depmod -b "$INSTALL_DIR/$DRIVER_NAME" 2>&1)
+
+    # "grep -v ..." removes warnings that do not cause a problem for the gpu
+    driver installation
+
+    echo "$error_out" | grep -v 'depmod: WARNING:' || true
+
+
+    modprobe -q -d "$INSTALL_DIR/$DRIVER_NAME" nvidia
+
+    modprobe -q -d "$INSTALL_DIR/$DRIVER_NAME" nvidia-uvm
+
+    if [ ! -e /dev/nvidia0 ] ; then
+        NVDEVS=$(lspci | grep -i NVIDIA)
+        N3D=$(echo "$NVDEVS" | grep -c "3D controller") || true
+        NVGA=$(echo "$NVDEVS" | grep -c "VGA compatible controller") || true
+        N=$((N3D + NVGA - 1)) || true
+        for i in $(seq 0 $N); do mknod -m 666 /dev/nvidia"$i" c 195 "$i"; done
+    fi
+
+    if [ ! -e /dev/nvidiactl ] ; then
+        mknod -m 666 /dev/nvidiactl c 195 255
+    fi
+
+    if [ ! -e /dev/nvidia-uvm ] ; then
+        D=$(grep nvidia-uvm /proc/devices | cut -d " " -f 1)
+        mknod -m 666 /dev/nvidia-uvm c "$D" 0
+    fi
+
+
+    # For A100 GPUs we install additional device files to support Fabric Manager
+
+    GPU_NAME=$("${NVIDIA_BIN}"/nvidia-smi -i 0 --query-gpu=name
+    --format=csv,noheader)
+
+    if [[ "$GPU_NAME" == *"A100"* ]]; then
+      "${NVIDIA_BIN}"/nvidia-modprobe --unified-memory --nvlink
+      "${NVIDIA_BIN}"/nvidia-modprobe --nvswitch -c 0
+      "${NVIDIA_BIN}"/nvidia-modprobe --nvswitch -c 1
+      "${NVIDIA_BIN}"/nvidia-modprobe --nvswitch -c 2
+      "${NVIDIA_BIN}"/nvidia-modprobe --nvswitch -c 3
+      "${NVIDIA_BIN}"/nvidia-modprobe --nvswitch -c 4
+      "${NVIDIA_BIN}"/nvidia-modprobe --nvswitch -c 5
+    fi
+
+
+    echo "NVIDIA driver installed OK"
+  install_fabricmanager.sh: >-
+    #!/bin/bash
+
+
+    export DEBUG=${DEBUG:-false}
+
+
+    if ${DEBUG}; then
+      set -x
+    fi
+
+
+    BIN_DIR=${BIN_DIR:-/opt/nvidia-installer}
+
+    # shellcheck disable=SC1090
+
+    source "$BIN_DIR"/set_env_vars.sh
+
+
+    GPU_NAME=$("${NVIDIA_ROOT}"/bin/nvidia-smi -i 0 --query-gpu=name
+    --format=csv,noheader)
+
+
+    # Typical GPU name is something like "NVIDIA H100 80GB HBM3"
+
+    # Fabric manager is required by the newer, bigger GPUs like A100, H100, etc.
+    so we match those GPU types here
+
+    if [[ "$GPU_NAME" =~ (A100|H100|H200|B100|B200) ]]; then
+      sed 's/DAEMONIZE=1/DAEMONIZE=0/g' "/usr/share/nvidia/nvswitch/fabricmanager.cfg" > /etc/fabricmanager.cfg
+      sed -i 's/LOG_FILE_NAME=.*$/LOG_FILE_NAME=/g' /etc/fabricmanager.cfg
+
+      # Run Fabric Manager
+      nv-fabricmanager -c /etc/fabricmanager.cfg
+    fi
+
+    echo "Sleep infinity"
+
+    sleep infinity
+  installer_entrypoint.sh: >+
+    #!/usr/bin/env bash
+
+
+    set -euo pipefail
+
+
+    if ${DEBUG}; then
+      set -x
+      env
+    fi
+
+
+    : "${KERNEL_TYPE:?Argument KERNEL_TYPE needs to be set and non-empty.}"
+
+    : "${TARGET_ARCH:?Argument TARGET_ARCH needs to be set and non-empty.}"
+
+    : "${KERNEL_NAME:?Argument KERNEL_NAME needs to be set and non-empty.}"
+
+    : "${DRIVER_VERSION:?Argument DRIVER_VERSION needs to be set and
+    non-empty.}"
+
+    : "${INSTALL_DIR:?Argument INSTALL_DIR needs to be set and non-empty.}"
+
+    : "${NODE_NAME:?Argument NODE_NAME needs to be set and non-empty.}"
+
+
+    LABEL_GPU_NAME="${LABEL_GPU_NAME:-gpu.kyma-project.io/gpu-name}"
+
+
+    log() {
+      set +x
+      local NAME="kyma-gpu-driver"
+      local MSG=$1
+      local TS
+      TS=$(date '+%Y-%m-%d %H:%M:%S')
+      echo "${TS} ${NAME}: $MSG"
+      if ${DEBUG}; then
+        set -x
+      fi
+    }
+
+
+    log "GPU driver installer entrypoint"
+
+
+    find /dev -name "nvidia*"
+
+
+    SHOULD_INSTALL=true
+
+
+    DEVICE_EXISTS=false
+
+    if [ -e /dev/nvidia0 ] && [ -e /dev/nvidiactl ] && [ -e /dev/nvidia-uvm ];
+    then
+      DEVICE_EXISTS=true
+    fi
+
+
+    if [ "$DEVICE_EXISTS" = true ]; then
+      SHOULD_INSTALL=false
+      NVIDIA_ROOT="${NVIDIA_ROOT:-/opt/nvidia-installer/cache/nvidia/$DRIVER_VERSION}"
+      export NVIDIA_ROOT
+      LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-$NVIDIA_ROOT/lib}"
+      export LD_LIBRARY_PATH
+
+      echo $NVIDIA_ROOT
+      echo $LD_LIBRARY_PATH
+
+      GPU_NAME=$(/opt/nvidia-installer/cache/nvidia/550.127.08/bin/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
+
+      # NVIDIA-SMI has failed
+      if [[ $GPU_NAME == *"NVIDIA-SMI"* ]]; then
+        echo "$GPU_NAME"
+        echo "Reinstalling the driver"
+        find /dev -name "nvidia*"
+        find /dev -name "nvidia*" -exec rm -rf {} \;
+        SHOULD_INSTALL=true
+      else
+        echo "Detected GPU device name: $GPU_NAME"
+      fi
+    fi
+
+
+    if [ "$SHOULD_INSTALL" = false ]; then
+
+      log "GPU driver already installed"
+
+    else
+
+      log "Compiling the GPU driver"
+
+      ./compile.sh
+
+      ls -la /out
+      ls -la /out/nvidia
+
+
+      log "Installing dependency packages"
+
+      apt-get update && apt-get install --no-install-recommends -y \
+          kmod \
+          pciutils \
+          ca-certificates \
+          wget \
+          curl \
+          xz-utils \
+          && rm -rf /var/lib/apt/lists/*
+
+      log "Installing GPU driver"
+
+      mkdir -p /opt/nvidia-installer
+      cp ./*.sh /opt/nvidia-installer
+
+      source /opt/nvidia-installer/load_install_gpu_driver.sh
+
+    fi
+
+
+
+
+    NVIDIA_ROOT="${NVIDIA_ROOT:-/opt/nvidia-installer/cache/nvidia/$DRIVER_VERSION}"
+
+    LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-$NVIDIA_ROOT/lib}"
+
+
+    echo "INSTALL_DIR: $INSTALL_DIR"
+
+    echo "NVIDIA_ROOT: $NVIDIA_ROOT"
+
+    echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+
+
+    GPU_NAME=$(/opt/nvidia-installer/cache/nvidia/550.127.08/bin/nvidia-smi -i 0
+    --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
+
+
+    echo "GPU_NAME=$GPU_NAME"
+
+
+    cd /opt/nvidia-installer
+
+
+    echo "Downloading kubectl"
+
+
+    curl -LO "https://dl.k8s.io/release/$(curl -L -s
+    https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+
+
+    chmod +x ./kubectl
+
+
+    GPU_NAME_LABEL="${GPU_NAME// /-}"
+
+
+    echo "Labeling node $NODE_NAME with $LABEL_GPU_NAME = $GPU_NAME_LABEL"
+
+
+    ./kubectl label node $NODE_NAME $LABEL_GPU_NAME="$GPU_NAME_LABEL"
+    --overwrite
+
+
+
+    if ${DEBUG}; then
+      echo "Entrypoint sleep infinity"
+      sleep infinity
+    fi
+
+  load_install_gpu_driver.sh: >-
+    #!/bin/bash
+
+    echo "nvidia-installer begins"
+
+    set -e
+
+
+    BIN_DIR=${BIN_DIR:-/opt/nvidia-installer}
+
+    # shellcheck disable=SC1090
+
+    source "$BIN_DIR"/set_env_vars.sh
+
+    LD_ROOT=${LD_ROOT:-/}
+
+
+    main() {
+        parse_parameters "${@}"
+
+        trap post_process EXIT
+
+        if ${DEBUG}; then
+          set -x
+        fi
+
+        check_status "${DRIVER_NAME}" "${DRIVER_VERSION}" && exit 0
+
+        driver_cached=$(driver_in_cache "${DRIVER_NAME}" "${DRIVER_VERSION}")
+
+        if ! ${driver_cached}; then
+          mkdir -p "${CACHE_DIR}"/"${DRIVER_NAME}"
+          tar xzf /out/"${DRIVER_NAME}"/"${DRIVER_VERSION}".tar.gz -C "${CACHE_DIR}"/"${DRIVER_NAME}"
+        fi
+
+        NVIDIA_BIN="${NVIDIA_ROOT}/bin"
+        install "$DRIVER_NAME" "$DRIVER_VERSION" "$NVIDIA_BIN"
+
+        if ! "${NVIDIA_BIN}/nvidia-smi"; then
+            echo "[ERROR] driver installation failed. Could not run nvidia-smi."
+            exit 1
+        fi
+
+    }
+
+
+    check_status() {
+        local DRIVER_NAME=$1
+        local DRIVER_VERSION=$2
+        # Check to see if /dev/nvidia0 exists already - this means that a previous driver version already exists,
+        #  in which case we don't want to overwrite with a conflicting new version
+        if [ -e /dev/nvidia0 ] && [ -e /dev/nvidiactl ] && [ -e /dev/nvidia-uvm ]; then
+          echo "[INFO] /dev/nvidia* files exist - driver version $(ls "${CACHE_DIR}"/"${DRIVER_NAME}") already installed"
+          return 0
+        fi
+
+        echo "$DRIVER_NAME $DRIVER_VERSION is out of date" 1>&2
+        return 1;
+    }
+
+
+    driver_in_cache() {
+        local DRIVER_NAME=$1
+        local DRIVER_VERSION=$2
+        # shellcheck disable=SC2155
+        local KERNEL_NAME=$(uname -r)
+        if [ -d "${CACHE_DIR}/${DRIVER_NAME}/${DRIVER_VERSION}/lib/modules/${KERNEL_NAME}" ]; then
+            echo "true"
+        fi
+        echo "false"
+    }
+
+
+    install() {
+        local DRIVER_NAME=$1
+        local DRIVER_VERSION=$2
+        local NVIDIA_BIN=$3
+
+        mkdir -p "${INSTALL_DIR}"
+        rm -rf "${INSTALL_DIR:?}/${DRIVER_NAME}"
+        ln -s "${CACHE_DIR}/${DRIVER_NAME}/${DRIVER_VERSION}" "${INSTALL_DIR}/${DRIVER_NAME}"
+
+        if [ -d "${INSTALL_DIR}/${DRIVER_NAME}/lib" ] ; then
+            mkdir -p "${LD_ROOT}/etc/ld.so.conf.d"
+            echo "${INSTALL_DIR}/${DRIVER_NAME}/lib" \
+                > "${LD_ROOT}/etc/ld.so.conf.d/${DRIVER_NAME}.conf"
+            ldconfig -r "${LD_ROOT}" 2> /dev/null
+        fi
+        # shellcheck disable=SC1090
+        source "${BIN_DIR}/install.sh"
+    }
+
+
+    print_menu() {
+        printf '%s is a tool for automatically installing (and potentially compiling) gpu drivers on gardenlinux nodes.\n\n' "$(basename "$0")"
+        printf 'Usage:\n\n \t %s [options]\n\n' "$(basename "$0")"
+        printf 'The options are:\n\n'
+
+        echo "       | --debug                  Debug flag for more noisy logging."
+        echo "  -h   | --help                   Prints the help"
+        echo ""
+    }
+
+
+    parse_parameters() {
+
+      while [ "$#" -gt 0 ]
+      do
+        case "$1" in
+        -h|--help)
+          print_menu
+          exit 0
+          ;;
+        --debug)
+          export DEBUG="true"
+          ;;
+        --)
+          break
+          ;;
+        -*)
+          echo "Invalid option '$1'. Use --help to see the valid options" >&2
+          exit 1
+          ;;
+        *)  
+          break
+          ;;
+        esac
+        shift
+      done
+    }
+
+
+    check_required() {
+        if [ -z "${!2}" ]; then
+          print_menu
+          error "${1} \"${2}\" is not set"
+        fi
+    }
+
+
+    error() {
+      echo -e "\033[1;31m[-] [ERROR]: $*\033[0m";
+      exit 1
+    }
+
+
+    log() {
+      echo -e "\033[1;32m[+]: $*\033[0m"
+    }
+
+
+    post_process() {
+        if ${DEBUG}; then
+            echo "LoadInstallGpuDriver post_process"
+            #sleep infinity
+        fi
+    }
+
+
+    main "${@}"
+  set_env_vars.sh: >-
+    #!/bin/bash
+
+    export CACHE_DIR=${CACHE_DIR:-$BIN_DIR/cache}
+
+    export INSTALL_DIR=${INSTALL_DIR:-/opt/drivers}
+
+    export DEBUG=${DEBUG:-false}
+
+    export DRIVER_NAME=nvidia
+
+    # Look for a file <driver version>.tar.gz and remove the .tar.gz to get the
+    driver version
+
+    # shellcheck disable=SC2155,SC2012
+
+    export DRIVER_VERSION=$(ls /out/nvidia | sed 's/.tar.gz//')
+
+    export NVIDIA_ROOT="${CACHE_DIR}/${DRIVER_NAME}/${DRIVER_VERSION}"
+
+    export LD_LIBRARY_PATH="${NVIDIA_ROOT}/lib"
+
+
+    if [ -z "$TARGET_ARCH" ]; then
+      ARCH_TYPE=$(uname -m)
+    else
+      declare -A arch_translation
+      arch_translation=(["amd64"]="x86_64" ["arm64"]="aarch64")
+      ARCH_TYPE=${arch_translation[$TARGET_ARCH]}
+    fi
+
+    export ARCH_TYPE
 kind: ConfigMap
 metadata:
-  name: {{ template "chart.fullname" . }}-scripts
-  namespace: {{ .Release.Namespace }}
-data:
-{{- range $path, $_ := .Files.Glob "files/gardenlinux-nvidia-installer/*.sh" }}
-  {{ base $path }}: |-
-{{ $.Files.Get $path | indent 4 }}
-{{- end }}
-{{- range $path, $_ := .Files.Glob "files/*.sh" }}
-  {{ base $path }}: |-
-{{ $.Files.Get $path | indent 4 }}
-{{- end }}
+  labels:
+    app.kubernetes.io/name: '{{ template "chart.fullname" . }}-installer'
+    app.kubernetes.io/part-of: '{{ template "chart.fullname" . }}'
+  name: '{{ template "chart.fullname" . }}-scripts'
+  namespace: '{{ template "chart.fullname" . }}-system'

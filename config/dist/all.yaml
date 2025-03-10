@@ -808,7 +808,7 @@ spec:
   template:
     metadata:
       annotations:
-        kubectl.kubernetes.io/default-container: manager
+        kubectl.kubernetes.io/default-container: gpu-driver-manager
       labels:
         app.kubernetes.io/name: gpu-driver
     spec:
@@ -830,7 +830,7 @@ spec:
             port: 8081
           initialDelaySeconds: 15
           periodSeconds: 20
-        name: manager
+        name: gpu-driver-manager
         ports: []
         readinessProbe:
           httpGet:

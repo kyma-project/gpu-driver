@@ -1,0 +1,11 @@
+{{- if .Values.namespace.create }}
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    app.kubernetes.io/name: '{{ template "chart.fullname" . }}'
+  name: '{{ template "chart.fullname" . }}-system'
+
+
+{{- end }}

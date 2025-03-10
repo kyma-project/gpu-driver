@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/name: '{{ template "chart.fullname" . }}-installer'
+    app.kubernetes.io/part-of: '{{ template "chart.fullname" . }}'
+  name: '{{ template "chart.fullname" . }}-installer'
+  namespace: '{{ template "chart.fullname" . }}-system'
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: '{{ template "chart.fullname" . }}-installer'
+    app.kubernetes.io/part-of: '{{ template "chart.fullname" . }}'
+  name: '{{ template "chart.fullname" . }}-installer'
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - patch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/name: '{{ template "chart.fullname" . }}-installer'
+    app.kubernetes.io/part-of: '{{ template "chart.fullname" . }}'
+  name: '{{ template "chart.fullname" . }}-installer'
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: '{{ template "chart.fullname" . }}-installer'
+subjects:
+  - kind: ServiceAccount
+    name: '{{ template "chart.fullname" . }}-installer'
+    namespace: '{{ template "chart.fullname" . }}-system'

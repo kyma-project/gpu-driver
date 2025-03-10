@@ -19,8 +19,8 @@ manager:
   # when false the manager deployment will not be installed
   enabled: true
   # defaults to europe-docker.pkg.dev
-  repository: europe-docker.pkg.dev
+  repository: <manager-repository>
   # defaults to kyma-project/prod/gpu-driver
-  image: kyma-project/prod/gpu-driver
+  image: <manager-image>
   # the gpu-driver container tag
-  tag: v20250308-9d13dbc8
+  tag: <manager-tag>
