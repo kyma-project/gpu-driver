@@ -20,6 +20,28 @@ the latest versions of the packages. You can then run
 To install the `gpu-driver-operator` chart:
 
 ```shell
-helm upgrade --install gpu-driver kyma-gpu-driver/gpu-driver-operator -n gpu-driver-system
+helm upgrade --install gpu-driver kyma-gpu-driver/gpu-driver-operator
 ```
 
+## Upgrade
+
+When new version of gpu-driver-operator is released, to upgrade the operator you should first update
+the gpu-driver helm repository and fetch its new version. 
+
+```shell
+helm repo update
+```
+
+Now, you can upgrade existing installation with
+
+```shell
+helm upgrade --install gpu-driver kyma-gpu-driver/gpu-driver-operator
+```
+
+## Uninstall
+
+To uninstall the gpu-driver-operator you should run:
+
+```shell
+helm uninstall gpu-driver
+```

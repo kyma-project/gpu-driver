@@ -1,45 +1,81 @@
 [![REUSE status](https://api.reuse.software/badge/github.com/kyma-project/gpu-driver)](https://api.reuse.software/info/github.com/kyma-project/gpu-driver)
 
-> **NOTE:** This is a general template that you can use for a project README.md. Except for the mandatory sections, use only those sections that suit your use case but keep the proposed section order.
->
-> Mandatory sections: 
-> - `Overview`
-> - `Prerequisites`, if there are any requirements regarding hard- or software
-> - `Installation`
-> - `Contributing` - do not change this!
-> - `Code of Conduct` - do not change this!
-> - `Licensing` - do not change this!
+# Overview
 
-# {Project Title}
-<!--- mandatory --->
-> Modify the title and insert the name of your project. Use Heading 1 (H1).
+Kyma GPU driver is the remake of 
+[gardenlinux-nvidia-installer](https://github.com/gardenlinux/gardenlinux-nvidia-installer)
+that does in-cluster node kernel detection and driver compilation, not requiring 
+you to maintain a container repository with all possible images built for different 
+kernel versions.
 
-## Overview
-<!--- mandatory section --->
+# Prerequisites
 
-> Provide a description of the project's functionality.
->
-> If it is an example README.md, describe what the example illustrates.
+Kyma GPU driver operator requires a Kyma cluster with GPU machine types.
 
-## Prerequisites
+# Installation
 
-> List the requirements to run the project or example.
+You can install Kyma GPU driver operator by Helm chart and with plain manifest. 
+Helm chart is recommended since it simplifies the removal of unnecessary resources
+and uninstallation.
 
-## Installation
+## Install with Helm chart
 
-> Explain the steps to install your project. If there are multiple installation options, mention the recommended one and include others in a separate document. Create an ordered list for each installation task.
->
-> If it is an example README.md, describe how to build, run locally, and deploy the example. Format the example as code blocks and specify the language, highlighting where possible. Explain how you can validate that the example ran successfully. For example, define the expected output or commands to run which check a successful deployment.
->
-> Add subsections (H3) for better readability.
+Requirements:
+* Helm CLI - for details check [Installing Helm](https://helm.sh/docs/intro/install/)
 
-## Usage
+Once Helm has been set up correctly, add the repo as follows:
 
-> Explain how to use the project. You can create multiple subsections (H3). Include the instructions or provide links to the related documentation.
+```shell
+helm repo add kyma-gpu-driver https://kyma-project.github.io/gpu-driver
+```
 
-## Development
+If you had already added this repo earlier, run `helm repo update` to retrieve
+the latest versions of the packages. You can then run
+`helm search repo kyma-gpu-driver` to see the charts.
 
-> Add instructions on how to develop the project or example. It must be clear what to do and, for example, how to trigger the tests so that other contributors know how to make their pull requests acceptable. Include the instructions or provide links to related documentation.
+To install the `gpu-driver-operator` chart you should run:
+
+```shell
+helm upgrade --install gpu-driver kyma-gpu-driver/gpu-driver-operator
+```
+
+## Install with kubectl 
+
+Requirements:
+* kubectl - for details check [Kubernetes tools](https://kubernetes.io/docs/tasks/tools/#kubectl)
+
+To install the Kyma GPU driver operator you should run
+
+```shell
+curl https://raw.githubusercontent.com/kyma-project/gpu-driver/refs/heads/main/config/dist/all.yaml | kubectl apply -f -
+```
+
+> [!NOTE]  
+> If you are not familiar with the Kubernetes platform and details for the 
+> Kyma GPU driver operator manifests, it is recommended to use Helm installation
+> procedure. Installing the plain manifest with kubectl does not delete the old
+> resources, previously installed in some older version but removed
+> in the newer release. 
+
+# Usage and API
+
+To instruct Kyma GPU driver operator on which nodes you would like to have
+GPU driver installed you should create a GpuDriver custom resource.
+
+```yaml
+apiVersion: gpu.kyma-project.io/v1beta1
+kind: GpuDriver
+metadata:
+  name: gpu1
+spec:
+  nodeSelector:
+    worker.gardener.cloud/pool: gpu-worker-pool
+```
+
+The resource above specifies that all nodes from the node pool `gpu-worker-pool`, will be instrumented
+with the GPU driver. You can use any other set of labels as node selector. If node selector is empty, it 
+will match all nodes. 
+
 
 ## Contributing
 <!--- mandatory section - do not change this! --->
