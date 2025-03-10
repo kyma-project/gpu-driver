@@ -104,11 +104,8 @@ for (let doc of all) {
     }
 
     if (doc.kind === 'Deployment') {
-        doc.spec.template.spec.imagePullSecrets = `{{ template "image-pull-secrets" . }}`
+        doc.spec.template.spec.imagePullSecrets = 'imagePullSecretsReplaceMe'
     }
-    // TODO!!!
-    // spec.template.spec
-    // imagePullSecrets: {{ template "image-pull-secrets" . }}
 
     if (doc.kind === 'ClusterRoleBinding') {
         doc.roleRef.name = replaceName(doc.roleRef.name)
@@ -143,6 +140,7 @@ for (let prop in out) {
     }
     if (prop === 'deployment') {
         content = wrapWith(content, '{{- if .Values.manager.enabled }}', '{{- end }}')
+        content = content.replace('imagePullSecretsReplaceMe', `{{ template "image-pull-secrets" . }}`)
     }
     if (prop === 'ns') {
         content = wrapWith(content, '{{- if .Values.namespace.create }}', '{{- end }}')

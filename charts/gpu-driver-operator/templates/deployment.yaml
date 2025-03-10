@@ -70,7 +70,7 @@ spec:
         - configMap:
             name: '{{ template "chart.fullname" . }}-config'
           name: config
-      imagePullSecrets: '{{ template "image-pull-secrets" . }}'
+      imagePullSecrets: {{ template "image-pull-secrets" . }}
 
 
 {{- end }}
