@@ -17,6 +17,8 @@ limitations under the License.
 package v1beta1
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -57,8 +59,8 @@ type GpuDriverInstaller struct {
 //}
 
 type GpuDriverDevicePlugin struct {
-	// +kubebuilder:default=true
-	Enabled bool `json:"enabled,omitempty"`
+	// +optional
+	Disabled bool `json:"disabled,omitempty"`
 
 	// +optional
 	ImagePullSecrets []string `json:"imagePullSecrets,omitempty"`
@@ -143,6 +145,20 @@ func (in *GpuDriver) DevicePluginImage() string {
 		version = "1.0.25-gke.56"
 	}
 	return fmt.Sprintf("%s/%s:%s", repo, img, version)
+}
+
+func (in *GpuDriver) DevicePluginHash() string {
+	sig := fmt.Sprintf(
+		"%v|%v|%s|%s|%s|%s",
+		in.Spec.DevicePlugin.Disabled,
+		in.Spec.DevicePlugin.ImagePullSecrets,
+		in.Spec.DevicePlugin.ImagePullPolicy,
+		in.Spec.DevicePlugin.Repository,
+		in.Spec.DevicePlugin.Image,
+		in.Spec.DevicePlugin.Version,
+	)
+	hash := sha1.Sum([]byte(sig))
+	return hex.EncodeToString(hash[:])
 }
 
 // +kubebuilder:object:root=true

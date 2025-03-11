@@ -2,6 +2,7 @@ package gpudriver
 
 import (
 	"context"
+	"fmt"
 	gpuv1beta1 "github.com/kyma-project/gpu-driver/api/v1beta1"
 	"github.com/kyma-project/gpu-driver/internal/common/composed"
 	appsv1 "k8s.io/api/apps/v1"
@@ -28,6 +29,6 @@ func (s *State) ObjAsGpuDriver() *gpuv1beta1.GpuDriver {
 	return s.Obj().(*gpuv1beta1.GpuDriver)
 }
 
-func (s *State) DaeomsetName() string {
-	return s.ObjAsGpuDriver().Name
+func (s *State) DevicePluginDSName() string {
+	return fmt.Sprintf("device-plugin-%s", s.ObjAsGpuDriver().Name)
 }

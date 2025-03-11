@@ -39,5 +39,5 @@ func (s *State) ObjAsNode() *corev1.Node {
 
 func (s *State) JobName() string {
 	configName := fmt.Sprintf("%.*s", 200, s.GpuDriverConfig.Name)
-	return fmt.Sprintf("gpu-%s-%s", configName, s.ID)
+	return fmt.Sprintf("installer-%s-%s", configName, s.ID)
 }

@@ -2,6 +2,7 @@ package gpudriver
 
 import (
 	"context"
+	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/gpu-driver/internal/common/composed"
 	"github.com/kyma-project/gpu-driver/internal/common/k8sport"
 	"github.com/kyma-project/gpu-driver/internal/config"
@@ -23,9 +24,10 @@ func devicePluginDsCreate(ctx context.Context) (context.Context, error) {
 	ds := &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: config.GetNamespace(),
-			Name:      state.ObjAsGpuDriver().Name,
+			Name:      state.DevicePluginDSName(),
 			Labels: map[string]string{
 				flow.LabelGpuDriverConfig: state.ObjAsGpuDriver().Name,
+				flow.LabelSignature:       state.ObjAsGpuDriver().DevicePluginHash(),
 			},
 		},
 		Spec: appsv1.DaemonSetSpec{
@@ -92,10 +94,14 @@ func devicePluginDsCreate(ctx context.Context) (context.Context, error) {
 							Operator: corev1.TolerationOpExists,
 						},
 					},
+					ImagePullSecrets: pie.Map(state.ObjAsGpuDriver().Spec.DevicePlugin.ImagePullSecrets, func(x string) corev1.LocalObjectReference {
+						return corev1.LocalObjectReference{Name: x}
+					}),
 					Containers: []corev1.Container{
 						{
-							Name:  "nvidia-gpu-device-plugin",
-							Image: state.ObjAsGpuDriver().DevicePluginImage(),
+							Name:            "nvidia-gpu-device-plugin",
+							Image:           state.ObjAsGpuDriver().DevicePluginImage(),
+							ImagePullPolicy: state.ObjAsGpuDriver().Spec.DevicePlugin.ImagePullPolicy,
 							Command: []string{
 								"/usr/bin/nvidia-gpu-device-plugin",
 								"-logtostderr",
@@ -141,6 +147,11 @@ func devicePluginDsCreate(ctx context.Context) (context.Context, error) {
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error creating device plugin daemonset", composed.StopWithRequeue, ctx)
 	}
+
+	logger := composed.LoggerFromCtx(ctx)
+	logger.WithValues(
+		"device-plugin-ds", ds.Name,
+	).Info("Device plugin daemonset created")
 
 	k8s.Event(ctx, state.ObjAsGpuDriver(), "Normal", "DevicePluginDaemonsetCreated", "Device plugin daemonset created")
 

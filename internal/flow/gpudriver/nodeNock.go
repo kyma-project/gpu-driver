@@ -11,7 +11,9 @@ import (
 
 // nodeNock annotates all matching nodes so they get changed to trigger their new reconciliation loop
 // in order to notify them there's a new GpuConfig affecting them. If a node already has the annotation
-// it is not changed
+// it is not changed.
+// This should be optimized since node reconciler has to be trigger only first time a GpuDriver config
+// is created, not every time a new node appears, by recording in the status if nock has been done.
 func nodeNock(ctx context.Context) (context.Context, error) {
 	state := composed.StateFromCtx[*State](ctx)
 

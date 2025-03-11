@@ -13,29 +13,33 @@ func New() composed.Action {
 		return composed.ComposeActions(
 			actions.LoadObj,
 			devicePluginDsLoad,
-			composed.If(
-				shouldDeleteDaemonset,
-				devicePluginDsDelete,
-			),
-			composed.If(
-				shouldCreateDaemonset,
-				nodeNock,
-				devicePluginDsCreate,
+			composed.IfElse(
+				daemonsetShouldExist,
+				// DevicePlugin should exist
+				composed.ComposeActions(
+					nodeNock,
+					devicePluginDsSignatureCheck,
+					devicePluginDsCreate,
+				),
+				// DevicePlugin should not exist
+				composed.ComposeActions(
+					devicePluginDsDelete,
+				),
 			),
 		)(ctx)
 	}
 }
 
-func shouldCreateDaemonset(ctx context.Context) bool {
+func daemonsetShouldExist(ctx context.Context) bool {
 	return composed.All(
 		composed.IsLoaded,
 		composed.Not(composed.MarkForDeletionPredicate),
-	)(ctx)
-}
-
-func shouldDeleteDaemonset(ctx context.Context) bool {
-	return composed.Any(
-		composed.Not(composed.IsLoaded),
-		composed.MarkForDeletionPredicate,
+		func(ctx context.Context) bool {
+			state := composed.StateFromCtx[*State](ctx)
+			if state.Obj() != nil && state.Obj().GetName() != "" && state.Obj().GetGeneration() > 0 {
+				return !state.ObjAsGpuDriver().Spec.DevicePlugin.Disabled
+			}
+			return false
+		},
 	)(ctx)
 }

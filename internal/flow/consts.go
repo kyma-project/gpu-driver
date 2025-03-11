@@ -11,6 +11,8 @@ const (
 	LabelCompiler        = "gpu.kyma-project.io/compiler"
 	LabelGpuName         = "gpu.kyma-project.io/gpu-name"
 	LabelDevicePlugin    = "gpu.kyma-project.io/device-plugin"
+
+	LabelSignature = "gpu.kyma-project.io/signature"
 )
 
 const (
