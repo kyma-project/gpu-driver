@@ -55,8 +55,7 @@ spec:
               properties:
                 devicePlugin:
                   properties:
-                    enabled:
-                      default: true
+                    disabled:
                       type: boolean
                     image:
                       default: gke-release/nvidia-gpu-device-plugin
