@@ -43,6 +43,16 @@ entries:
     version: 0.1.0
   gpu-driver-operator:
   - apiVersion: v2
+    appVersion: 0.5.0
+    created: "2025-03-11T16:49:14.755459177Z"
+    description: A Helm chart for Kubernetes
+    digest: 1e6bd4bdcf9ad198d90861cf6c7cd7ad2ca74a45c114aa61259e37600bf34df2
+    name: gpu-driver-operator
+    type: application
+    urls:
+    - https://github.com/kyma-project/gpu-driver/releases/download/gpu-driver-operator-0.5.0/gpu-driver-operator-0.5.0.tgz
+    version: 0.5.0
+  - apiVersion: v2
     appVersion: 0.4.0
     created: "2025-03-10T15:28:03.348802898Z"
     description: A Helm chart for Kubernetes
@@ -82,4 +92,4 @@ entries:
     urls:
     - https://github.com/kyma-project/gpu-driver/releases/download/gpu-driver-operator-0.1.0/gpu-driver-operator-0.1.0.tgz
     version: 0.1.0
-generated: "2025-03-10T15:28:03.348817715Z"
+generated: "2025-03-11T16:49:14.755485046Z"
