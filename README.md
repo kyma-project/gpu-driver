@@ -47,7 +47,7 @@ Requirements:
 To install the Kyma GPU driver operator you should run
 
 ```shell
-curl https://raw.githubusercontent.com/kyma-project/gpu-driver/refs/heads/main/config/dist/all.yaml | kubectl apply -f -
+kubectl apply -f https://raw.githubusercontent.com/kyma-project/gpu-driver/refs/heads/main/config/dist/all.yaml
 ```
 
 > [!NOTE]  
