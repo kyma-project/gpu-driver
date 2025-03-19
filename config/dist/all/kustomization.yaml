@@ -34,7 +34,7 @@ patches:
 images:
   - name: controller
     newName: europe-docker.pkg.dev/kyma-project/prod/gpu-driver
-    newTag: 0.2.0
+    newTag: 0.3.0
 
 replacements:
   - source:
