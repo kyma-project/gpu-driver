@@ -13,10 +13,11 @@ func New() composed.Action {
 
 		return composed.ComposeActions(
 			actions.LoadObjStopIfNotFound,
+			stopIfNodeDeletingOrUnschedulable,
 			nodeDetectKernelVersion,
 			nodeFindAllMatchingConfigs,
 			nodeFindGpuDriverConfig,
-			stopIfNodeDeletingOrUnschedulable,
+			stopIfNodeNotMatchingSelector,
 			composed.If(
 				composed.Not(nodeHasLabeledPredicate(flow.LabelDriverInstalled)),
 				driverPodLoad,

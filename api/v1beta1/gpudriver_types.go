@@ -149,13 +149,14 @@ func (in *GpuDriver) DevicePluginImage() string {
 
 func (in *GpuDriver) DevicePluginHash() string {
 	sig := fmt.Sprintf(
-		"%v|%v|%s|%s|%s|%s",
+		"%v|%v|%s|%s|%s|%s|%v|v2",
 		in.Spec.DevicePlugin.Disabled,
 		in.Spec.DevicePlugin.ImagePullSecrets,
 		in.Spec.DevicePlugin.ImagePullPolicy,
 		in.Spec.DevicePlugin.Repository,
 		in.Spec.DevicePlugin.Image,
 		in.Spec.DevicePlugin.Version,
+		in.Spec.NodeSelector,
 	)
 	hash := sha1.Sum([]byte(sig))
 	return hex.EncodeToString(hash[:])

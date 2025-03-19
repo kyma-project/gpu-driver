@@ -97,6 +97,7 @@ func devicePluginDsCreate(ctx context.Context) (context.Context, error) {
 					ImagePullSecrets: pie.Map(state.ObjAsGpuDriver().Spec.DevicePlugin.ImagePullSecrets, func(x string) corev1.LocalObjectReference {
 						return corev1.LocalObjectReference{Name: x}
 					}),
+					NodeSelector: state.ObjAsGpuDriver().Spec.NodeSelector,
 					Containers: []corev1.Container{
 						{
 							Name:            "nvidia-gpu-device-plugin",
