@@ -385,6 +385,9 @@ data:
       "6.6.63-cloud-amd64": "amd64-1592.4"
       "6.6.71-cloud-amd64": "amd64-1592.5"
       "6.6.78-cloud-amd64": "amd64-1592.6"
+      "6.6.83-cloud-amd64": "amd64-1592.7"
+      "6.6.84-cloud-amd64": "amd64-1592.8"
+      "6.12.10-cloud-amd64": "amd64-1760.4"
 
     driverVersions: {}
 
