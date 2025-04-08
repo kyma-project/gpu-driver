@@ -10,3 +10,5 @@ while IFS= read -r TAG; do
     KERNEL=$(docker run --platform linux/amd64 --rm -v $SCRIPT_DIR/../../charts/gpu-driver/files/gardenlinux-nvidia-installer:/mnt/scripts $IMAGE:$TAG /mnt/scripts/extract_kernel_name.sh cloud)
     echo "  $KERNEL: $TAG"
 done <<< "$TAGS"
+
+# gh api "/orgs/gardenlinux/packages/container/gardenlinux%2Fkmodbuild/versions?per_page=100&page=6" | jq '.[] | .metadata.container.tags[0]' | grep arm
