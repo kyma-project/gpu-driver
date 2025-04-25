@@ -76,18 +76,50 @@ The resource above specifies that all nodes from the node pool `gpu-worker-pool`
 with the GPU driver. You can use any other set of labels as node selector. If node selector is empty, it 
 will match all nodes. 
 
+# Troubleshooting
 
-## Contributing
+List all k8s nodes with expectation to have at least one node pool of machine types with GPU device, and that nodes in that pool have `.status.capacity["nvidia.com/gpu"]` > 0.
+
+```shell
+kubectl get nodes -o yaml
+```
+
+List k8s API resources with expectation that `gpudrivers gpu.kyma-project.io/v1beta1` exists.
+
+```shell
+kubectl api-resources | grep gpu
+```
+
+List k8s namespaces with expectation that `gpu-driver-system` namespace exists.
+
+```shell
+kubectl get ns
+```
+
+List `GpuDriver` CR resources with expectation to have one for each node pool having GPU capable machine type, with the appropriate node selector matching that node pool.
+
+```shell
+kubectl get GpuDriver -A -o yaml
+```
+
+List operator pods in the `gpu-driver-system` namespace.
+
+```shell
+kubectl get pods -n gpu-driver-system -o yaml
+```
+
+
+# Contributing
 <!--- mandatory section - do not change this! --->
 
 See the [Contributing Rules](CONTRIBUTING.md).
 
-## Code of Conduct
+# Code of Conduct
 <!--- mandatory section - do not change this! --->
 
 See the [Code of Conduct](CODE_OF_CONDUCT.md) document.
 
-## Licensing
+# Licensing
 <!--- mandatory section - do not change this! --->
 
 See the [license](./LICENSE) file.
