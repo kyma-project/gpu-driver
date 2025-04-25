@@ -76,7 +76,20 @@ The resource above specifies that all nodes from the node pool `gpu-worker-pool`
 with the GPU driver. You can use any other set of labels as node selector. If node selector is empty, it 
 will match all nodes. 
 
+
 # Troubleshooting
+
+List help repositories with expectation that `kyma-gpu-driver https://kyma-project.github.io/gpu-driver` is defined.
+
+```shell
+helm repo list | grep gpu 
+```
+
+List charts in the kyma-gpu-driver repo with expectations that latest version of the `kyma-gpu-driver/gpu-driver-operator` chart is present.
+
+```shell
+helm search repo kyma-gpu-driver
+```
 
 List all k8s nodes with expectation to have at least one node pool of machine types with GPU device, and that nodes in that pool have `.status.capacity["nvidia.com/gpu"]` > 0.
 
