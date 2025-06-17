@@ -9,7 +9,7 @@ on:
 
 permissions:
   id-token: write # This is required for requesting the JWT token
-  contents: read # This is required for actions/checkout
+  contents: write # This is required for actions/checkout
 
 jobs:
   build-image:
@@ -19,3 +19,29 @@ jobs:
       name: gpu-driver
       dockerfile: Dockerfile
       export-tags: true
+
+  create-release:
+    needs: build-image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Prepare release files
+        run: |
+          cp config/dist/all.yaml crds.yaml
+          cp config/dist/default-cr.yaml gpudriver-default-cr.yaml
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: |
+            Release Notes
+          files: |
+            crds.yaml
+            gpudriver-default-cr.yaml

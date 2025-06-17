@@ -15,16 +15,3 @@ jobs:
       name: gpu-driver
       dockerfile: Dockerfile
       export-tags: true
-  update-release:
-    needs: build-image
-    steps:
-      - name: Copy CRDs
-        id: copy_crds
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          release_id: 0.3.0
-          asset_path: config/dist/all.yaml
-          asset_name: crds.yaml
-          asset_content_type: application/json
