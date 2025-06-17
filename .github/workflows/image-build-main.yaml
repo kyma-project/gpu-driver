@@ -19,14 +19,3 @@ jobs:
       name: gpu-driver
       dockerfile: Dockerfile
       export-tags: true
-
-  update-release:
-    uses: actions/upload-release-asset@v1
-    needs: build-image
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    with:
-      release_id: ${{ github.ref_name }}
-      asset_path: ./my-artifact.zip
-      asset_name: my-artifact.zip
-      asset_content_type: application/zip
