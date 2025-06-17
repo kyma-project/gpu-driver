@@ -1,0 +1,38 @@
+name: Module Release
+
+on:
+  push:
+    branches:
+      - gh-action-test
+
+permissions:
+  id-token: write # This is required for requesting the JWT token
+  contents: write # This is required for actions/checkout
+
+jobs:
+  update-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Prepare release files
+        run: |
+          cp config/dist/all.yaml crds.yaml
+          cp config/dist/default-cr.yaml gpudriver-default-cr.yaml
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+        with:
+          tag_name: 0.3.1
+          name: Release 0.3.1
+          body: |
+            Release Notes
+          files: |
+            crds.yaml
+            gpudriver-default-cr.yaml
+          draft: true
+          prerelease: true

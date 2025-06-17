@@ -1,0 +1,5 @@
+apiVersion: gpu.kyma-project.io/v1beta1
+kind: GpuDriver
+metadata:
+  name: gpu-driver
+spec:
