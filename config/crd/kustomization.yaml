@@ -3,6 +3,7 @@
 # It should be run by config/default
 resources:
 - bases/gpu.kyma-project.io_gpudrivers.yaml
+- bases/gpu.kyma-project.io_gpudriveroperators.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches:

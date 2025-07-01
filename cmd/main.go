@@ -20,10 +20,11 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
-	"github.com/kyma-project/gpu-driver/internal/config"
 	"os"
 	"path"
 	"path/filepath"
+
+	"github.com/kyma-project/gpu-driver/internal/config"
 
 	"github.com/kyma-project/gpu-driver/internal/common/composed"
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -234,6 +235,12 @@ func main() {
 		Cluster: composed.NewDefaultStateClusterFromCluster(mgr),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GpuDriver")
+		os.Exit(1)
+	}
+	if err = (&controller.GpuDriverOperatorReconciler{
+		Cluster: composed.NewDefaultStateClusterFromCluster(mgr),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GpuDriverOperator")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

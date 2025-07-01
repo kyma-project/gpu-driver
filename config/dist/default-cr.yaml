@@ -1,6 +1,6 @@
 apiVersion: gpu.kyma-project.io/v1beta1
-kind: GpuDriver
+kind: GpuDriverOperator
 metadata:
-  name: gpu-driver
+  name: gpu-driver-operator
   namespace: kyma-system
 spec:

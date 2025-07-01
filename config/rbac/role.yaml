@@ -55,6 +55,7 @@ rules:
 - apiGroups:
   - gpu.kyma-project.io
   resources:
+  - gpudriveroperators
   - gpudrivers
   verbs:
   - create
@@ -67,12 +68,14 @@ rules:
 - apiGroups:
   - gpu.kyma-project.io
   resources:
+  - gpudriveroperators/finalizers
   - gpudrivers/finalizers
   verbs:
   - update
 - apiGroups:
   - gpu.kyma-project.io
   resources:
+  - gpudriveroperators/status
   - gpudrivers/status
   verbs:
   - get

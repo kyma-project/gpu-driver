@@ -1,0 +1,27 @@
+# permissions for end users to view gpudriveroperators.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: gpudriveroperator-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: gpu-driver
+    app.kubernetes.io/part-of: gpu-driver
+    app.kubernetes.io/managed-by: kustomize
+  name: gpudriveroperator-viewer-role
+rules:
+- apiGroups:
+  - gpu.kyma-project.io
+  resources:
+  - gpudriveroperators
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - gpu.kyma-project.io
+  resources:
+  - gpudriveroperators/status
+  verbs:
+  - get

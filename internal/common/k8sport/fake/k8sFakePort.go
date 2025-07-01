@@ -3,6 +3,8 @@ package fake
 import (
 	"context"
 	"fmt"
+	"sync"
+
 	"github.com/kyma-project/gpu-driver/internal/common/composed"
 	"github.com/kyma-project/gpu-driver/internal/common/k8sport"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -11,7 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
-	"sync"
 )
 
 type K8sFakePort interface {
@@ -19,7 +20,7 @@ type K8sFakePort interface {
 	Find(name types.NamespacedName, obj client.Object) (client.Object, schema.GroupVersionKind, error)
 }
 
-var _ K8sFakePort = &k8sFakePort{}
+//var _ K8sFakePort = &k8sFakePort{}
 
 type k8sFakePort struct {
 	m sync.Mutex

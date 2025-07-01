@@ -1,0 +1,12 @@
+apiVersion: gpu.kyma-project.io/v1beta1
+kind: GpuDriverOperator
+metadata:
+  labels:
+    app.kubernetes.io/name: gpudriveroperator
+    app.kubernetes.io/instance: gpudriveroperator-sample
+    app.kubernetes.io/part-of: gpu-driver
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: gpu-driver
+  name: gpudriveroperator-sample
+spec:
+  # TODO(user): Add fields here

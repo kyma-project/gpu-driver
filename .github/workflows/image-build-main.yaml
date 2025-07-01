@@ -27,6 +27,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Generate dist files
+        run: |
+          make dist-all
+
+      - name: Check for modified files
+        run: git diff --exit-code
+
       - name: Prepare release files
         run: |
           cp config/dist/all.yaml crds.yaml

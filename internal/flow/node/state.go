@@ -3,6 +3,7 @@ package node
 import (
 	"context"
 	"fmt"
+
 	gpuv1beta1 "github.com/kyma-project/gpu-driver/api/v1beta1"
 	"github.com/kyma-project/gpu-driver/internal/common/composed"
 	batchv1 "k8s.io/api/batch/v1"
@@ -27,6 +28,7 @@ type State struct {
 	AllMatchingConfigs []*gpuv1beta1.GpuDriver
 	GpuDriverConfig    *gpuv1beta1.GpuDriver
 	DriverVersion      string
+	OsImageVersion     string
 
 	ID  string
 	Job *batchv1.Job

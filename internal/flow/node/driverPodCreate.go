@@ -3,6 +3,7 @@ package node
 import (
 	"context"
 	"fmt"
+
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/gpu-driver/internal/common/composed"
 	"github.com/kyma-project/gpu-driver/internal/common/k8sport"
@@ -21,7 +22,10 @@ func driverPodCreate(ctx context.Context) (context.Context, error) {
 		return ctx, nil
 	}
 
-	tag := config.KernelToKmodbuild(state.KernelVersion)
+	tag := state.OsImageVersion
+	if tag == "" {
+		tag = config.KernelToKmodbuild(state.KernelVersion)
+	}
 	if tag == "" {
 		k8s := k8sport.FromCtxDefaultCluster(ctx)
 		k8s.Event(ctx, state.ObjAsNode(), "Warning", "UnknownKernelVersion", fmt.Sprintf("Unknown kernel version '%s", state.ObjAsNode().Status.NodeInfo.KernelVersion))
