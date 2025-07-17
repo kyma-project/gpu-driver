@@ -3,13 +3,14 @@ package node
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/elliotchance/pie/v2"
 	gpuv1beta1 "github.com/kyma-project/gpu-driver/api/v1beta1"
 	"github.com/kyma-project/gpu-driver/internal/common/composed"
 	"github.com/kyma-project/gpu-driver/internal/common/k8sport"
 	"github.com/kyma-project/gpu-driver/internal/config"
 	"github.com/kyma-project/gpu-driver/internal/flow"
-	"strings"
 )
 
 func nodeFindGpuDriverConfig(ctx context.Context) (context.Context, error) {

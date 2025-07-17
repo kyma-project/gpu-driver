@@ -2,10 +2,16 @@ package node
 
 import (
 	"context"
+	"regexp"
+
 	"github.com/google/uuid"
 	"github.com/kyma-project/gpu-driver/internal/common/composed"
 	"github.com/kyma-project/gpu-driver/internal/common/k8sport"
 	"github.com/kyma-project/gpu-driver/internal/flow"
+)
+
+var (
+	re = regexp.MustCompile(`Garden Linux ([a-zA-Z0-9.]+)$`)
 )
 
 func nodeDetectKernelVersion(ctx context.Context) (context.Context, error) {
@@ -15,6 +21,12 @@ func nodeDetectKernelVersion(ctx context.Context) (context.Context, error) {
 	state.ID = state.ObjAsNode().Labels[flow.LabelId]
 	if state.ID == "" {
 		state.ID = uuid.NewString()
+	}
+
+	//Parse the OS version.
+	match := re.FindStringSubmatch(state.ObjAsNode().Status.NodeInfo.OSImage)
+	if len(match) > 1 {
+		state.OsImageVersion = match[1]
 	}
 
 	k8s := k8sport.FromCtxDefaultCluster(ctx)
