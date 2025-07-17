@@ -23,10 +23,12 @@ import (
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	gpuv1beta1 "github.com/kyma-project/gpu-driver/api/v1beta1"
+	"github.com/kyma-project/gpu-driver/internal/common/composed"
 )
 
 var _ = Describe("GpuDriver Controller", func() {
@@ -72,15 +74,16 @@ var _ = Describe("GpuDriver Controller", func() {
 		})
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
-			// controllerReconciler := &GpuDriverReconciler{
-			// 	Client: k8sClient,
-			// 	Scheme: k8sClient.Scheme(),
-			// }
 
-			// _, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
-			// 	NamespacedName: typeNamespacedName,
-			// })
-			// Expect(err).NotTo(HaveOccurred())
+			controllerReconciler := &GpuDriverReconciler{
+				Cluster: composed.NewStateCluster(
+					composed.DefaultClusterID, k8sClient, nil, nil, k8sClient.Scheme()),
+			}
+
+			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: typeNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
 			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
 			// Example: If you expect a certain status condition after reconciliation, verify it here.
 		})
