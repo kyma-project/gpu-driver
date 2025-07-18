@@ -28,6 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	gpuv1beta1 "github.com/kyma-project/gpu-driver/api/v1beta1"
+	"github.com/kyma-project/gpu-driver/internal/common/composed"
 )
 
 var _ = Describe("GpuDriver Controller", func() {
@@ -52,6 +53,11 @@ var _ = Describe("GpuDriver Controller", func() {
 						Namespace: "default",
 					},
 					// TODO(user): Specify other spec details if needed.
+					Spec: gpuv1beta1.GpuDriverSpec{
+						NodeSelector: map[string]string{
+							"worker.gardener.cloud/pool": "gpu-worker-pool",
+						},
+					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}
@@ -68,9 +74,10 @@ var _ = Describe("GpuDriver Controller", func() {
 		})
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
+
 			controllerReconciler := &GpuDriverReconciler{
-				Client: k8sClient,
-				Scheme: k8sClient.Scheme(),
+				Cluster: composed.NewStateCluster(
+					composed.DefaultClusterID, k8sClient, nil, nil, k8sClient.Scheme()),
 			}
 
 			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
