@@ -44,11 +44,15 @@ helm upgrade --install gpu-driver kyma-gpu-driver/gpu-driver-operator
 Requirements:
 * kubectl - for details check [Kubernetes tools](https://kubernetes.io/docs/tasks/tools/#kubectl)
 
-To install the Kyma GPU driver operator you should run
+To install the latest working version of Kyma GPU driver operator you should run
 
 ```shell
 kubectl apply -f https://raw.githubusercontent.com/kyma-project/gpu-driver/refs/heads/main/config/dist/all.yaml
 ```
+
+> [!WARNING]  
+> The command above uses the lastest version from main branch which potentially might be unstable and not working.
+> Not recommended for production usage - use helm installation instead.
 
 > [!NOTE]  
 > If you are not familiar with the Kubernetes platform and details for the 
