@@ -391,7 +391,7 @@ data:
 
     driverVersions: {}
 
-    defaultDriverVersion: "550.127.08"
+    defaultDriverVersion: "590.48.01"
 kind: ConfigMap
 metadata:
   labels:
@@ -418,7 +418,7 @@ data:
     \\\n          --no-libglx-indirect \\\n          --no-install-libglvnd \\\n          --kernel-name=\"$KERNEL_NAME\"
     \\\n          --no-drm \\\n          --no-install-compat32-libs \\\n          --no-opengl-files
     \\\n          --ui=none --no-questions \\\n          --no-kernel-module-source
-    \\\n          --no-systemd \\\n          --skip-depmod \\\n          --log-file-name=\"$PWD\"/nvidia-installer.log
+    \\\n          --no-systemd \\\n          --skip-depmod \\\n          --kernel-module-type=proprietary \\\n          --log-file-name=\"$PWD\"/nvidia-installer.log
     \\\n          --utility-prefix=\"$OUTDIR\" \\\n          --utility-libdir=lib
     \\\n          --kernel-install-path=\"$OUTDIR\"/lib/modules/\"$KERNEL_NAME\" \\\n
     \       && test -e \"$OUTDIR\"/lib/modules/\"$KERNEL_NAME\"/nvidia.ko\n      then\n
@@ -428,7 +428,7 @@ data:
     \\\n          --no-opengl-files \\\n          --no-libglx-indirect \\\n          --no-install-libglvnd
     \\\n          --kernel-name=\"$KERNEL_NAME\" \\\n          --no-drm \\\n          --no-opengl-files
     \\\n          --no-kernel-module-source \\\n          --ui=none --no-questions
-    \\\n          --no-systemd \\\n          --skip-depmod \\\n          --log-file-name=\"$PWD\"/nvidia-installer.log
+    \\\n          --no-systemd \\\n          --skip-depmod \\\n          --kernel-module-type=proprietary \\\n          --log-file-name=\"$PWD\"/nvidia-installer.log
     \\\n          --utility-prefix=\"$OUTDIR\" \\\n          --utility-libdir=lib
     \\\n          --kernel-install-path=\"$OUTDIR\"/lib/modules/\"$KERNEL_NAME\" \\\n
     \       && test -e \"$OUTDIR\"/lib/modules/\"$KERNEL_NAME\"/nvidia.ko\n      then\n
@@ -640,7 +640,7 @@ data:
       echo $NVIDIA_ROOT
       echo $LD_LIBRARY_PATH
 
-      GPU_NAME=$(/opt/nvidia-installer/cache/nvidia/550.127.08/bin/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
+      GPU_NAME=$(/opt/nvidia-installer/cache/nvidia/590.48.01/bin/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
 
       # NVIDIA-SMI has failed
       if [[ $GPU_NAME == *"NVIDIA-SMI"* ]]; then
@@ -697,7 +697,7 @@ data:
     echo "NVIDIA_ROOT: $NVIDIA_ROOT"
     echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
-    GPU_NAME=$(/opt/nvidia-installer/cache/nvidia/550.127.08/bin/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
+    GPU_NAME=$(/opt/nvidia-installer/cache/nvidia/590.48.01/bin/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
 
     echo "GPU_NAME=$GPU_NAME"
 

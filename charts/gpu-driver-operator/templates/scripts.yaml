@@ -82,6 +82,7 @@ data:
               --no-kernel-module-source \
               --no-systemd \
               --skip-depmod \
+              --kernel-module-type=proprietary \
               --log-file-name="$PWD"/nvidia-installer.log \
               --utility-prefix="$OUTDIR" \
               --utility-libdir=lib \
@@ -107,6 +108,7 @@ data:
               --ui=none --no-questions \
               --no-systemd \
               --skip-depmod \
+              --kernel-module-type=proprietary \
               --log-file-name="$PWD"/nvidia-installer.log \
               --utility-prefix="$OUTDIR" \
               --utility-libdir=lib \
@@ -446,7 +448,7 @@ data:
       echo $NVIDIA_ROOT
       echo $LD_LIBRARY_PATH
 
-      GPU_NAME=$(/opt/nvidia-installer/cache/nvidia/550.127.08/bin/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
+      GPU_NAME=$(/opt/nvidia-installer/cache/nvidia/590.48.01/bin/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
 
       # NVIDIA-SMI has failed
       if [[ $GPU_NAME == *"NVIDIA-SMI"* ]]; then
@@ -510,7 +512,7 @@ data:
     echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
 
-    GPU_NAME=$(/opt/nvidia-installer/cache/nvidia/550.127.08/bin/nvidia-smi -i 0
+    GPU_NAME=$(/opt/nvidia-installer/cache/nvidia/590.48.01/bin/nvidia-smi -i 0
     --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
 
 

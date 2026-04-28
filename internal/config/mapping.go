@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/spf13/viper"
 	"sync"
+
+	"github.com/spf13/viper"
 )
 
 const (
@@ -28,7 +29,7 @@ var defaultKmodbuildVersions = map[string]string{
 	"6.6.78-cloud-amd64": "amd64-1592.6",
 }
 
-const defaultDriverVersion = "550.127.08"
+const defaultDriverVersion = "590.48.01"
 
 var defaultDriverVersions = map[string]string{}
 

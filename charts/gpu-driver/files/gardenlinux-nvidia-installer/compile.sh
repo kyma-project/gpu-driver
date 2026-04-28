@@ -57,6 +57,7 @@ case $TARGET_ARCH in
           --no-kernel-module-source \
           --no-systemd \
           --skip-depmod \
+          --kernel-module-type=proprietary \
           --log-file-name="$PWD"/nvidia-installer.log \
           --utility-prefix="$OUTDIR" \
           --utility-libdir=lib \
@@ -82,6 +83,7 @@ case $TARGET_ARCH in
           --ui=none --no-questions \
           --no-systemd \
           --skip-depmod \
+          --kernel-module-type=proprietary \
           --log-file-name="$PWD"/nvidia-installer.log \
           --utility-prefix="$OUTDIR" \
           --utility-libdir=lib \

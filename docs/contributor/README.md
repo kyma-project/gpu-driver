@@ -11,7 +11,7 @@ Defaults
 
 Inputs
 * DRIVER_VERSION
-  * 550.127.08
+  * 590.48.01
 
 Run flow:
 * run ??? and detect Garden Linux version from the node

@@ -32,7 +32,7 @@ gardenlinux:
   image: gardenlinux/gardenlinux/kmodbuild
 
 nvidia:
-  driverVersion: "550.127.08"
+  driverVersion: "590.48.01"
   installer:
     hostDriverPath: /opt/drivers
     resources: {}
