@@ -418,20 +418,20 @@ data:
     \\\n          --no-libglx-indirect \\\n          --no-install-libglvnd \\\n          --kernel-name=\"$KERNEL_NAME\"
     \\\n          --no-drm \\\n          --no-install-compat32-libs \\\n          --no-opengl-files
     \\\n          --ui=none --no-questions \\\n          --no-kernel-module-source
-    \\\n          --no-systemd \\\n          --skip-depmod \\\n          --kernel-module-type=proprietary \\\n          --log-file-name=\"$PWD\"/nvidia-installer.log
-    \\\n          --utility-prefix=\"$OUTDIR\" \\\n          --utility-libdir=lib
-    \\\n          --kernel-install-path=\"$OUTDIR\"/lib/modules/\"$KERNEL_NAME\" \\\n
-    \       && test -e \"$OUTDIR\"/lib/modules/\"$KERNEL_NAME\"/nvidia.ko\n      then\n
+    \\\n          --no-systemd \\\n          --skip-depmod \\\n          --kernel-module-type=proprietary
+    \\\n          --log-file-name=\"$PWD\"/nvidia-installer.log \\\n          --utility-prefix=\"$OUTDIR\"
+    \\\n          --utility-libdir=lib \\\n          --kernel-install-path=\"$OUTDIR\"/lib/modules/\"$KERNEL_NAME\"
+    \\\n        && test -e \"$OUTDIR\"/lib/modules/\"$KERNEL_NAME\"/nvidia.ko\n      then\n
     \       echo \"Successfully compiled NVIDIA modules\"\n      else \n        echo
     \"[ERROR] Failed to compile NVIDIA modules\"\n        cat \"$PWD\"/nvidia-installer.log\n
     \       exit 1\n      fi\n        ;;\n    arm64)\n      if ./nvidia-installer
     \\\n          --no-opengl-files \\\n          --no-libglx-indirect \\\n          --no-install-libglvnd
     \\\n          --kernel-name=\"$KERNEL_NAME\" \\\n          --no-drm \\\n          --no-opengl-files
     \\\n          --no-kernel-module-source \\\n          --ui=none --no-questions
-    \\\n          --no-systemd \\\n          --skip-depmod \\\n          --kernel-module-type=proprietary \\\n          --log-file-name=\"$PWD\"/nvidia-installer.log
-    \\\n          --utility-prefix=\"$OUTDIR\" \\\n          --utility-libdir=lib
-    \\\n          --kernel-install-path=\"$OUTDIR\"/lib/modules/\"$KERNEL_NAME\" \\\n
-    \       && test -e \"$OUTDIR\"/lib/modules/\"$KERNEL_NAME\"/nvidia.ko\n      then\n
+    \\\n          --no-systemd \\\n          --skip-depmod \\\n          --kernel-module-type=proprietary
+    \\\n          --log-file-name=\"$PWD\"/nvidia-installer.log \\\n          --utility-prefix=\"$OUTDIR\"
+    \\\n          --utility-libdir=lib \\\n          --kernel-install-path=\"$OUTDIR\"/lib/modules/\"$KERNEL_NAME\"
+    \\\n        && test -e \"$OUTDIR\"/lib/modules/\"$KERNEL_NAME\"/nvidia.ko\n      then\n
     \       echo \"Successfully compiled NVIDIA modules\"\n      else \n        echo
     \"[ERROR] Failed to compile NVIDIA modules\"\n        cat /tmp/nvidia/NVIDIA-Linux-aarch64-\"$DRIVER_VERSION\"/nvidia-installer.log\n
     \       cat \"$PWD\"/nvidia-installer.log\n\n        exit 1\n      fi\n        ;;\n
@@ -640,7 +640,7 @@ data:
       echo $NVIDIA_ROOT
       echo $LD_LIBRARY_PATH
 
-      GPU_NAME=$(/opt/nvidia-installer/cache/nvidia/590.48.01/bin/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
+      GPU_NAME=$("$NVIDIA_ROOT"/bin/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
 
       # NVIDIA-SMI has failed
       if [[ $GPU_NAME == *"NVIDIA-SMI"* ]]; then
@@ -697,7 +697,7 @@ data:
     echo "NVIDIA_ROOT: $NVIDIA_ROOT"
     echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
-    GPU_NAME=$(/opt/nvidia-installer/cache/nvidia/590.48.01/bin/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
+    GPU_NAME=$("$NVIDIA_ROOT"/bin/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
 
     echo "GPU_NAME=$GPU_NAME"
 

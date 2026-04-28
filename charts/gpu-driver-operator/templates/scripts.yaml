@@ -1,72 +1,50 @@
 apiVersion: v1
 data:
-  compile.sh: >
+  compile.sh: |
     #!/bin/bash
-
     if [ -z "$DRIVER_VERSION" ]; then
         echo "Error: DRIVER_VERSION is not set."
         exit 1
     fi
-
     if [ -z "$KERNEL_NAME" ]; then
         echo "Error: KERNEL_NAME is not set."
         exit 1
     fi
 
-
-    echo "Compiling NVIDIA modules for driver version $DRIVER_VERSION on kernel
-    $KERNEL_NAME"
-
+    echo "Compiling NVIDIA modules for driver version $DRIVER_VERSION on kernel $KERNEL_NAME"
 
     set -x
-
     mkdir -p /tmp/nvidia
-
 
     if [ -z "$TARGET_ARCH" ]; then
         echo "Error: TARGET_ARCH is not set."
         exit 1
     fi
 
-
     declare -A arch_translation
-
     arch_translation=(["amd64"]="x86_64" ["arm64"]="aarch64")
-
 
     if [[ ! ${arch_translation[$TARGET_ARCH]+_} ]]; then
         echo "Error: Unsupported TARGET_ARCH value."
         exit 2
     fi
-
     ARCH_TYPE=${arch_translation[$TARGET_ARCH]}
 
 
-
     # shellcheck disable=SC2164
-
     pushd /tmp/nvidia
-
     DRIVER_URL="https://uk.download.nvidia.com/tesla/$DRIVER_VERSION/NVIDIA-Linux-$ARCH_TYPE-$DRIVER_VERSION.run"
-
     if ! curl -Ls "${DRIVER_URL}" -o nvidia.run ; then
       echo "Failed to download ${DRIVER_URL}"
       exit 1
     fi
-
     chmod +x nvidia.run
-
     ./nvidia.run -x -s
 
-
     # shellcheck disable=SC2164
-
     pushd "./NVIDIA-Linux-$ARCH_TYPE-$DRIVER_VERSION"
-
     export IGNORE_MISSING_MODULE_SYMVERS=1
-
     OUTDIR="/out/nvidia/$DRIVER_VERSION"
-
 
     case $TARGET_ARCH in
         amd64)
@@ -130,67 +108,42 @@ data:
             ;;
     esac
 
-
     echo "Archiving assets"
 
-
     # Archive library .so files
-
-    cp /usr/lib/"$ARCH_TYPE"-linux-gnu/*nvidia*
-    /usr/lib/"$ARCH_TYPE"-linux-gnu/*cuda* "$OUTDIR"/lib
-
+    cp /usr/lib/"$ARCH_TYPE"-linux-gnu/*nvidia* /usr/lib/"$ARCH_TYPE"-linux-gnu/*cuda* "$OUTDIR"/lib
 
     # We don't need the installer binaries, or the icons/desktop files in /share
-
     rm -rf "$OUTDIR"/bin/*install* "$OUTDIR"/share
 
-
     # shellcheck disable=SC2046
-
-    tar czf "$OUTDIR".tar.gz --directory $(dirname "$OUTDIR") $(basename
-    "$OUTDIR") && rm -rf "$OUTDIR"
-  download_fabricmanager.sh: >+
+    tar czf "$OUTDIR".tar.gz --directory $(dirname "$OUTDIR") $(basename "$OUTDIR") && rm -rf "$OUTDIR"
+  download_fabricmanager.sh: |+
     #!/bin/bash
-
     echo "Downloading NVIDIA fabric manager for driver version $DRIVER_VERSION"
-
     set -x
-
     DRIVER_BRANCH=$(echo "$DRIVER_VERSION" | grep -oE '^[0-9]+')
-
     if [ -z "$TARGET_ARCH" ]; then
         echo "Error: TARGET_ARCH is not set."
         exit 1
     fi
 
-
     declare -A arch_translation
-
     arch_translation=(["amd64"]="x86_64" ["arm64"]="aarch64")
-
 
     if [[ ! ${arch_translation[$TARGET_ARCH]+_} ]]; then
         echo "Error: Unsupported TARGET_ARCH value."
         exit 2
     fi
 
-
     mkdir -p /tmp/nvidia
 
-
     # shellcheck disable=SC2164
-
     pushd /tmp/nvidia
 
-
     # Download Fabric Manager tarball
-
-    wget -O /tmp/keyring.deb
-    https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb
-    && dpkg -i /tmp/keyring.deb
-
+    wget -O /tmp/keyring.deb https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb && dpkg -i /tmp/keyring.deb
     apt-get update
-
     apt-get install -V nvidia-fabricmanager-"$DRIVER_BRANCH"="$DRIVER_VERSION"-1
 
   extract_kernel_name.sh: >
@@ -232,26 +185,18 @@ data:
 
 
     echo "$kernel_name"
-  fabricmanager_entrypoint.sh: >
+  fabricmanager_entrypoint.sh: |
     #!/usr/bin/env bash
-
 
     set -euo pipefail
 
-
-    : "${DRIVER_VERSION:?Argument DRIVER_VERSION needs to be set and
-    non-empty.}"
-
+    : "${DRIVER_VERSION:?Argument DRIVER_VERSION needs to be set and non-empty.}"
     : "${TARGET_ARCH:?Argument TARGET_ARCH needs to be set and non-empty.}"
-
 
     DRIVER_BRANCH=$(echo "$DRIVER_VERSION" | grep -oE '^[0-9]+')
 
-
     declare -A arch_translation
-
     arch_translation=(["amd64"]="x86_64" ["arm64"]="aarch64")
-
 
     if [[ ! ${arch_translation[$TARGET_ARCH]+_} ]]; then
         echo "Error: Unsupported TARGET_ARCH value."
@@ -259,29 +204,17 @@ data:
     fi
 
 
-
     mkdir -p /tmp/nvidia
 
-
     # shellcheck disable=SC2164
-
     pushd /tmp/nvidia
-
 
     install_packages ca-certificates wget
 
-
     # Download Fabric Manager tarball
-
-    wget -O /tmp/keyring.deb
-    https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb
-    && dpkg -i /tmp/keyring.deb
-
+    wget -O /tmp/keyring.deb https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb && dpkg -i /tmp/keyring.deb
     apt-get update -qq
-
-    apt-get install -y --no-install-recommends -V
-    nvidia-fabricmanager-"$DRIVER_BRANCH"="$DRIVER_VERSION"-1
-
+    apt-get install -y --no-install-recommends -V nvidia-fabricmanager-"$DRIVER_BRANCH"="$DRIVER_VERSION"-1
 
     rm -r /var/lib/apt/lists /var/cache/apt/archives
   install.sh: >-
@@ -378,35 +311,24 @@ data:
     echo "Sleep infinity"
 
     sleep infinity
-  installer_entrypoint.sh: >+
+  installer_entrypoint.sh: |+
     #!/usr/bin/env bash
 
-
     set -euo pipefail
-
 
     if ${DEBUG}; then
       set -x
       env
     fi
 
-
     : "${KERNEL_TYPE:?Argument KERNEL_TYPE needs to be set and non-empty.}"
-
     : "${TARGET_ARCH:?Argument TARGET_ARCH needs to be set and non-empty.}"
-
     : "${KERNEL_NAME:?Argument KERNEL_NAME needs to be set and non-empty.}"
-
-    : "${DRIVER_VERSION:?Argument DRIVER_VERSION needs to be set and
-    non-empty.}"
-
+    : "${DRIVER_VERSION:?Argument DRIVER_VERSION needs to be set and non-empty.}"
     : "${INSTALL_DIR:?Argument INSTALL_DIR needs to be set and non-empty.}"
-
     : "${NODE_NAME:?Argument NODE_NAME needs to be set and non-empty.}"
 
-
     LABEL_GPU_NAME="${LABEL_GPU_NAME:-gpu.kyma-project.io/gpu-name}"
-
 
     log() {
       set +x
@@ -420,23 +342,16 @@ data:
       fi
     }
 
-
     log "GPU driver installer entrypoint"
-
 
     find /dev -name "nvidia*"
 
-
     SHOULD_INSTALL=true
 
-
     DEVICE_EXISTS=false
-
-    if [ -e /dev/nvidia0 ] && [ -e /dev/nvidiactl ] && [ -e /dev/nvidia-uvm ];
-    then
+    if [ -e /dev/nvidia0 ] && [ -e /dev/nvidiactl ] && [ -e /dev/nvidia-uvm ]; then
       DEVICE_EXISTS=true
     fi
-
 
     if [ "$DEVICE_EXISTS" = true ]; then
       SHOULD_INSTALL=false
@@ -448,7 +363,7 @@ data:
       echo $NVIDIA_ROOT
       echo $LD_LIBRARY_PATH
 
-      GPU_NAME=$(/opt/nvidia-installer/cache/nvidia/590.48.01/bin/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
+      GPU_NAME=$("$NVIDIA_ROOT"/bin/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
 
       # NVIDIA-SMI has failed
       if [[ $GPU_NAME == *"NVIDIA-SMI"* ]]; then
@@ -461,7 +376,6 @@ data:
         echo "Detected GPU device name: $GPU_NAME"
       fi
     fi
-
 
     if [ "$SHOULD_INSTALL" = false ]; then
 
@@ -499,48 +413,30 @@ data:
 
 
 
-
     NVIDIA_ROOT="${NVIDIA_ROOT:-/opt/nvidia-installer/cache/nvidia/$DRIVER_VERSION}"
-
     LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-$NVIDIA_ROOT/lib}"
 
-
     echo "INSTALL_DIR: $INSTALL_DIR"
-
     echo "NVIDIA_ROOT: $NVIDIA_ROOT"
-
     echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
-
-    GPU_NAME=$(/opt/nvidia-installer/cache/nvidia/590.48.01/bin/nvidia-smi -i 0
-    --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
-
+    GPU_NAME=$("$NVIDIA_ROOT"/bin/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
 
     echo "GPU_NAME=$GPU_NAME"
 
-
     cd /opt/nvidia-installer
-
 
     echo "Downloading kubectl"
 
-
-    curl -LO "https://dl.k8s.io/release/$(curl -L -s
-    https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-
+    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 
     chmod +x ./kubectl
 
-
     GPU_NAME_LABEL="${GPU_NAME// /-}"
-
 
     echo "Labeling node $NODE_NAME with $LABEL_GPU_NAME = $GPU_NAME_LABEL"
 
-
-    ./kubectl label node $NODE_NAME $LABEL_GPU_NAME="$GPU_NAME_LABEL"
-    --overwrite
-
+    ./kubectl label node $NODE_NAME $LABEL_GPU_NAME="$GPU_NAME_LABEL" --overwrite
 
 
     if ${DEBUG}; then
