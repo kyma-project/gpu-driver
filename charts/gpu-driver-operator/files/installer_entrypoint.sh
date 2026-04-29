@@ -49,7 +49,7 @@ if [ "$DEVICE_EXISTS" = true ]; then
   echo $NVIDIA_ROOT
   echo $LD_LIBRARY_PATH
 
-  GPU_NAME=$(/opt/nvidia-installer/cache/nvidia/590.48.01/bin/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
+  GPU_NAME=$("$NVIDIA_ROOT"/bin/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
 
   # NVIDIA-SMI has failed
   if [[ $GPU_NAME == *"NVIDIA-SMI"* ]]; then
@@ -105,7 +105,7 @@ LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-$NVIDIA_ROOT/lib}"
 echo "NVIDIA_ROOT: $NVIDIA_ROOT"
 echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
-GPU_NAME=$(/opt/nvidia-installer/cache/nvidia/590.48.01/bin/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
+GPU_NAME=$("$NVIDIA_ROOT"/bin/nvidia-smi -i 0 --query-gpu=name --format=csv,noheader | tr -d '\n' || echo '')
 
 echo "GPU_NAME=$GPU_NAME"
 
