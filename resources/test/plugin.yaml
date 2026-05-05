@@ -23,7 +23,7 @@ spec:
           hostPath:
             path: /dev
         - hostPath:
-            path: /opt/nvidia-installer/cache/nvidia/550.127.08
+            path: /opt/nvidia-installer/cache/nvidia/590.48.01
             type: Directory
           name: nvidia
       containers:
