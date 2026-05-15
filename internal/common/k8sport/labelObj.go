@@ -11,6 +11,7 @@ import (
 
 type K8sLabelObjPort interface {
 	PatchMergeLabels(ctx context.Context, obj client.Object, labels map[string]string) (bool, error)
+	PatchDeleteLabels(ctx context.Context, obj client.Object, labelKeys []string) error
 }
 
 func NewK8sLabelObjPort(clusterID string) K8sLabelObjPort {
@@ -23,6 +24,30 @@ func NewK8sLabelObjPortOnDefaultCluster() K8sLabelObjPort {
 
 type k8sLabelObjPortImpl struct {
 	clusterID string
+}
+
+func (p *k8sLabelObjPortImpl) PatchDeleteLabels(ctx context.Context, obj client.Object, labelKeys []string) error {
+	nullLabels := make(map[string]interface{}, len(labelKeys))
+	for _, k := range labelKeys {
+		nullLabels[k] = nil
+	}
+	data := map[string]interface{}{
+		"metadata": map[string]interface{}{
+			"labels": nullLabels,
+		},
+	}
+	b, err := json.Marshal(data)
+	if err != nil {
+		return fmt.Errorf("failed to marshal label delete patch: %w", err)
+	}
+	cluster := composed.ClusterFromCtx(ctx, p.clusterID)
+	if err := cluster.K8sClient().Patch(ctx, obj, client.RawPatch(types.MergePatchType, b)); err != nil {
+		return err
+	}
+	for _, k := range labelKeys {
+		delete(obj.GetLabels(), k)
+	}
+	return nil
 }
 
 func (p *k8sLabelObjPortImpl) PatchMergeLabels(ctx context.Context, obj client.Object, labels map[string]string) (bool, error) {

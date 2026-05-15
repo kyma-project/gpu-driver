@@ -71,7 +71,7 @@ func KernelToDriver(kernel string) string {
 	mapping := cfg.GetStringMapString(keyDriverVersions)
 	val, ok := mapping[kernel]
 	if !ok || val == "" {
-		return defaultDriverVersion
+		return DefaultDriverVersion()
 	}
 	return val
 }
