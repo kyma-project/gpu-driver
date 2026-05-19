@@ -87,6 +87,31 @@ func (f *k8sFakePort) PatchMergeLabels(ctx context.Context, obj client.Object, l
 	return changed, nil
 }
 
+func (f *k8sFakePort) PatchDeleteLabels(ctx context.Context, obj client.Object, labelKeys []string) error {
+	f.m.Lock()
+	defer f.m.Unlock()
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+
+	o, gvk, err := f.findNoLock(client.ObjectKeyFromObject(obj), obj)
+	if err != nil {
+		return err
+	}
+	if o == nil {
+		return apierrors.NewNotFound(schema.GroupResource{
+			Group:    gvk.Group,
+			Resource: gvk.Kind,
+		}, obj.GetName())
+	}
+
+	for _, k := range labelKeys {
+		delete(o.GetLabels(), k)
+		delete(obj.GetLabels(), k)
+	}
+	return nil
+}
+
 func (f *k8sFakePort) PatchMergeAnnotations(ctx context.Context, obj client.Object, annotations map[string]string) (bool, error) {
 	f.m.Lock()
 	defer f.m.Unlock()
