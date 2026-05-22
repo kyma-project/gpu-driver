@@ -9,7 +9,15 @@ permissions:
   contents: read # This is required for actions/checkout
 
 jobs:
+  guard-image-build:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'pr-build-image') }}
+    runs-on: ubuntu-latest
+    environment: guard-image-build
+    steps:
+      - run: echo "Build approved"
+
   build-image:
+    needs: guard-image-build
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
     with:
       name: gpu-driver
