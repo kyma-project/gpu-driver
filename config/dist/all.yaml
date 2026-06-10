@@ -21,151 +21,151 @@ spec:
     singular: gpudriver
   scope: Cluster
   versions:
-  - name: v1beta1
-    schema:
-      openAPIV3Schema:
-        description: GpuDriver is the Schema for the gpudrivers API.
-        properties:
-          apiVersion:
-            description: |-
-              APIVersion defines the versioned schema of this representation of an object.
-              Servers should convert recognized schemas to the latest internal value, and
-              may reject unrecognized values.
-              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
-            type: string
-          kind:
-            description: |-
-              Kind is a string value representing the REST resource this object represents.
-              Servers may infer this from the endpoint the client submits requests to.
-              Cannot be updated.
-              In CamelCase.
-              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
-            type: string
-          metadata:
-            type: object
-          spec:
-            description: GpuDriverSpec defines the desired state of GpuDriver.
-            properties:
-              devicePlugin:
-                properties:
-                  disabled:
-                    type: boolean
-                  image:
-                    default: gke-release/nvidia-gpu-device-plugin
-                    type: string
-                  imagePullPolicy:
-                    default: IfNotPresent
-                    description: PullPolicy describes a policy for if/when to pull
-                      a container image
-                    type: string
-                  imagePullSecrets:
-                    items:
-                      type: string
-                    type: array
-                  repository:
-                    default: gcr.io
-                    type: string
-                  version:
-                    default: 1.0.25-gke.56
-                    type: string
-                type: object
-              driverVersion:
-                type: string
-              installer:
-                properties:
-                  image:
-                    default: gardenlinux/gardenlinux/kmodbuild
-                    type: string
-                  imagePullPolicy:
-                    default: IfNotPresent
-                    description: PullPolicy describes a policy for if/when to pull
-                      a container image
-                    type: string
-                  imagePullSecrets:
-                    items:
-                      type: string
-                    type: array
-                  repository:
-                    default: ghcr.io
-                    type: string
-                type: object
-              nodeSelector:
-                additionalProperties:
-                  type: string
-                type: object
-            required:
-            - nodeSelector
-            type: object
-          status:
-            description: GpuDriverStatus defines the observed state of GpuDriver.
-            properties:
-              conditions:
-                items:
-                  description: Condition contains details for one aspect of the current
-                    state of this API Resource.
+    - name: v1beta1
+      schema:
+        openAPIV3Schema:
+          description: GpuDriver is the Schema for the gpudrivers API.
+          properties:
+            apiVersion:
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
+                Servers should convert recognized schemas to the latest internal value, and
+                may reject unrecognized values.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+              type: string
+            kind:
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
+                Servers may infer this from the endpoint the client submits requests to.
+                Cannot be updated.
+                In CamelCase.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: GpuDriverSpec defines the desired state of GpuDriver.
+              properties:
+                devicePlugin:
                   properties:
-                    lastTransitionTime:
-                      description: |-
-                        lastTransitionTime is the last time the condition transitioned from one status to another.
-                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
-                      format: date-time
+                    disabled:
+                      type: boolean
+                    image:
+                      default: gke-release/nvidia-gpu-device-plugin
                       type: string
-                    message:
-                      description: |-
-                        message is a human readable message indicating details about the transition.
-                        This may be an empty string.
-                      maxLength: 32768
+                    imagePullPolicy:
+                      default: IfNotPresent
+                      description: PullPolicy describes a policy for if/when to pull
+                        a container image
                       type: string
-                    observedGeneration:
-                      description: |-
-                        observedGeneration represents the .metadata.generation that the condition was set based upon.
-                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
-                        with respect to the current state of the instance.
-                      format: int64
-                      minimum: 0
-                      type: integer
-                    reason:
-                      description: |-
-                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
-                        Producers of specific condition types may define expected values and meanings for this field,
-                        and whether the values are considered a guaranteed API.
-                        The value should be a CamelCase string.
-                        This field may not be empty.
-                      maxLength: 1024
-                      minLength: 1
-                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                    imagePullSecrets:
+                      items:
+                        type: string
+                      type: array
+                    repository:
+                      default: gcr.io
                       type: string
-                    status:
-                      description: status of the condition, one of True, False, Unknown.
-                      enum:
-                      - "True"
-                      - "False"
-                      - Unknown
+                    version:
+                      default: 1.0.25-gke.56
                       type: string
-                    type:
-                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
-                      maxLength: 316
-                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
-                      type: string
-                  required:
-                  - lastTransitionTime
-                  - message
-                  - reason
-                  - status
-                  - type
                   type: object
-                type: array
-                x-kubernetes-list-map-keys:
-                - type
-                x-kubernetes-list-type: map
-              state:
-                type: string
-            type: object
-        type: object
-    served: true
-    storage: true
-    subresources:
-      status: {}
+                driverVersion:
+                  type: string
+                installer:
+                  properties:
+                    image:
+                      default: gardenlinux/gardenlinux/kmodbuild
+                      type: string
+                    imagePullPolicy:
+                      default: IfNotPresent
+                      description: PullPolicy describes a policy for if/when to pull
+                        a container image
+                      type: string
+                    imagePullSecrets:
+                      items:
+                        type: string
+                      type: array
+                    repository:
+                      default: ghcr.io
+                      type: string
+                  type: object
+                nodeSelector:
+                  additionalProperties:
+                    type: string
+                  type: object
+              required:
+                - nodeSelector
+              type: object
+            status:
+              description: GpuDriverStatus defines the observed state of GpuDriver.
+              properties:
+                conditions:
+                  items:
+                    description: Condition contains details for one aspect of the current
+                      state of this API Resource.
+                    properties:
+                      lastTransitionTime:
+                        description: |-
+                          lastTransitionTime is the last time the condition transitioned from one status to another.
+                          This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                        format: date-time
+                        type: string
+                      message:
+                        description: |-
+                          message is a human readable message indicating details about the transition.
+                          This may be an empty string.
+                        maxLength: 32768
+                        type: string
+                      observedGeneration:
+                        description: |-
+                          observedGeneration represents the .metadata.generation that the condition was set based upon.
+                          For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                          with respect to the current state of the instance.
+                        format: int64
+                        minimum: 0
+                        type: integer
+                      reason:
+                        description: |-
+                          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                          Producers of specific condition types may define expected values and meanings for this field,
+                          and whether the values are considered a guaranteed API.
+                          The value should be a CamelCase string.
+                          This field may not be empty.
+                        maxLength: 1024
+                        minLength: 1
+                        pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                        type: string
+                      status:
+                        description: status of the condition, one of True, False, Unknown.
+                        enum:
+                          - "True"
+                          - "False"
+                          - Unknown
+                        type: string
+                      type:
+                        description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                        maxLength: 316
+                        pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                        type: string
+                    required:
+                      - lastTransitionTime
+                      - message
+                      - reason
+                      - status
+                      - type
+                    type: object
+                  type: array
+                  x-kubernetes-list-map-keys:
+                    - type
+                  x-kubernetes-list-type: map
+                state:
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -195,37 +195,37 @@ metadata:
   name: gpu-driver-leader-election-role
   namespace: gpu-driver-system
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - coordination.k8s.io
-  resources:
-  - leases
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - create
-  - patch
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -236,96 +236,96 @@ metadata:
     app.kubernetes.io/part-of: gpu-driver
   name: gpu-driver-installer
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  verbs:
-  - get
-  - list
-  - watch
-  - update
-  - patch
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - patch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: gpu-driver-manager-role
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - create
-  - patch
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  verbs:
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - nodes/status
-  - pods/status
-  verbs:
-  - get
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - apps
-  resources:
-  - daemonsets
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - gpu.kyma-project.io
-  resources:
-  - gpudrivers
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - gpu.kyma-project.io
-  resources:
-  - gpudrivers/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - gpu.kyma-project.io
-  resources:
-  - gpudrivers/status
-  verbs:
-  - get
-  - patch
-  - update
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - nodes/status
+      - pods/status
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - daemonsets
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - gpu.kyma-project.io
+    resources:
+      - gpudrivers
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - gpu.kyma-project.io
+    resources:
+      - gpudrivers/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - gpu.kyma-project.io
+    resources:
+      - gpudrivers/status
+    verbs:
+      - get
+      - patch
+      - update
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -340,9 +340,9 @@ roleRef:
   kind: Role
   name: gpu-driver-leader-election-role
 subjects:
-- kind: ServiceAccount
-  name: gpu-driver-manager
-  namespace: gpu-driver-system
+  - kind: ServiceAccount
+    name: gpu-driver-manager
+    namespace: gpu-driver-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -357,9 +357,9 @@ roleRef:
   kind: ClusterRole
   name: gpu-driver-installer
 subjects:
-- kind: ServiceAccount
-  name: gpu-driver-installer
-  namespace: gpu-driver-system
+  - kind: ServiceAccount
+    name: gpu-driver-installer
+    namespace: gpu-driver-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -373,9 +373,9 @@ roleRef:
   kind: ClusterRole
   name: gpu-driver-manager-role
 subjects:
-- kind: ServiceAccount
-  name: gpu-driver-manager
-  namespace: gpu-driver-system
+  - kind: ServiceAccount
+    name: gpu-driver-manager
+    namespace: gpu-driver-system
 ---
 apiVersion: v1
 data:
@@ -413,12 +413,15 @@ data:
     shellcheck disable=SC2164\npushd /tmp/nvidia\nDRIVER_URL=\"https://uk.download.nvidia.com/tesla/$DRIVER_VERSION/NVIDIA-Linux-$ARCH_TYPE-$DRIVER_VERSION.run\"\nif
     ! curl -Ls \"${DRIVER_URL}\" -o nvidia.run ; then\n  echo \"Failed to download
     ${DRIVER_URL}\"\n  exit 1\nfi\nchmod +x nvidia.run\n./nvidia.run -x -s\n\n# shellcheck
-    disable=SC2164\npushd \"./NVIDIA-Linux-$ARCH_TYPE-$DRIVER_VERSION\"\nexport IGNORE_MISSING_MODULE_SYMVERS=1\nOUTDIR=\"/out/nvidia/$DRIVER_VERSION\"\n\ncase
+    disable=SC2164\npushd \"./NVIDIA-Linux-$ARCH_TYPE-$DRIVER_VERSION\"\nexport IGNORE_MISSING_MODULE_SYMVERS=1\nOUTDIR=\"/out/nvidia/$DRIVER_VERSION\"\n\n#
+    --kernel-module-type=proprietary was introduced in driver 560; omit it for older
+    versions\nKERNEL_MODULE_TYPE_FLAG=\"\"\nDRIVER_MAJOR=$(echo \"$DRIVER_VERSION\"
+    | cut -d. -f1)\nif [ \"$DRIVER_MAJOR\" -ge 560 ]; then\n  KERNEL_MODULE_TYPE_FLAG=\"--kernel-module-type=proprietary\"\nfi\n\ncase
     $TARGET_ARCH in\n    amd64)\n      if ./nvidia-installer \\\n          --no-opengl-files
     \\\n          --no-libglx-indirect \\\n          --no-install-libglvnd \\\n          --kernel-name=\"$KERNEL_NAME\"
     \\\n          --no-drm \\\n          --no-install-compat32-libs \\\n          --no-opengl-files
     \\\n          --ui=none --no-questions \\\n          --no-kernel-module-source
-    \\\n          --no-systemd \\\n          --skip-depmod \\\n          --kernel-module-type=proprietary
+    \\\n          --no-systemd \\\n          --skip-depmod \\\n          ${KERNEL_MODULE_TYPE_FLAG:+\"$KERNEL_MODULE_TYPE_FLAG\"}
     \\\n          --log-file-name=\"$PWD\"/nvidia-installer.log \\\n          --utility-prefix=\"$OUTDIR\"
     \\\n          --utility-libdir=lib \\\n          --kernel-install-path=\"$OUTDIR\"/lib/modules/\"$KERNEL_NAME\"
     \\\n        && test -e \"$OUTDIR\"/lib/modules/\"$KERNEL_NAME\"/nvidia.ko\n      then\n
@@ -428,7 +431,7 @@ data:
     \\\n          --no-opengl-files \\\n          --no-libglx-indirect \\\n          --no-install-libglvnd
     \\\n          --kernel-name=\"$KERNEL_NAME\" \\\n          --no-drm \\\n          --no-opengl-files
     \\\n          --no-kernel-module-source \\\n          --ui=none --no-questions
-    \\\n          --no-systemd \\\n          --skip-depmod \\\n          --kernel-module-type=proprietary
+    \\\n          --no-systemd \\\n          --skip-depmod \\\n          ${KERNEL_MODULE_TYPE_FLAG:+\"$KERNEL_MODULE_TYPE_FLAG\"}
     \\\n          --log-file-name=\"$PWD\"/nvidia-installer.log \\\n          --utility-prefix=\"$OUTDIR\"
     \\\n          --utility-libdir=lib \\\n          --kernel-install-path=\"$OUTDIR\"/lib/modules/\"$KERNEL_NAME\"
     \\\n        && test -e \"$OUTDIR\"/lib/modules/\"$KERNEL_NAME\"/nvidia.ko\n      then\n
@@ -815,46 +818,46 @@ spec:
         app.kubernetes.io/name: gpu-driver
     spec:
       containers:
-      - args:
-        - --leader-elect
-        - --health-probe-bind-address=:8081
-        command:
-        - /manager
-        env:
-        - name: NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        image: europe-docker.pkg.dev/kyma-project/prod/gpu-driver:0.4.0
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 8081
-          initialDelaySeconds: 15
-          periodSeconds: 20
-        name: gpu-driver-manager
-        ports: []
-        readinessProbe:
-          httpGet:
-            path: /readyz
-            port: 8081
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        resources:
-          limits:
-            cpu: 500m
-            memory: 128Mi
-          requests:
-            cpu: 10m
-            memory: 64Mi
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-            - ALL
-        volumeMounts:
-        - mountPath: /opt/kyma/gpu-driver/config
-          name: config
+        - args:
+            - --leader-elect
+            - --health-probe-bind-address=:8081
+          command:
+            - /manager
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          image: europe-docker.pkg.dev/kyma-project/prod/gpu-driver:0.4.0
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          name: gpu-driver-manager
+          ports: []
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            limits:
+              cpu: 500m
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - mountPath: /opt/kyma/gpu-driver/config
+              name: config
       securityContext:
         runAsNonRoot: true
         seccompProfile:
@@ -862,6 +865,6 @@ spec:
       serviceAccountName: gpu-driver-manager
       terminationGracePeriodSeconds: 10
       volumes:
-      - configMap:
-          name: gpu-driver-config
-        name: config
+        - configMap:
+            name: gpu-driver-config
+          name: config

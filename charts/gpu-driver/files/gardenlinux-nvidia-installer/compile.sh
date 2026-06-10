@@ -43,6 +43,13 @@ pushd "./NVIDIA-Linux-$ARCH_TYPE-$DRIVER_VERSION"
 export IGNORE_MISSING_MODULE_SYMVERS=1
 OUTDIR="/out/nvidia/$DRIVER_VERSION"
 
+# --kernel-module-type=proprietary was introduced in driver 560; omit it for older versions
+KERNEL_MODULE_TYPE_FLAG=""
+DRIVER_MAJOR=$(echo "$DRIVER_VERSION" | cut -d. -f1)
+if [ "$DRIVER_MAJOR" -ge 560 ]; then
+  KERNEL_MODULE_TYPE_FLAG="--kernel-module-type=proprietary"
+fi
+
 case $TARGET_ARCH in
     amd64)
       if ./nvidia-installer \
@@ -57,7 +64,7 @@ case $TARGET_ARCH in
           --no-kernel-module-source \
           --no-systemd \
           --skip-depmod \
-          --kernel-module-type=proprietary \
+          ${KERNEL_MODULE_TYPE_FLAG:+"$KERNEL_MODULE_TYPE_FLAG"} \
           --log-file-name="$PWD"/nvidia-installer.log \
           --utility-prefix="$OUTDIR" \
           --utility-libdir=lib \
@@ -65,7 +72,7 @@ case $TARGET_ARCH in
         && test -e "$OUTDIR"/lib/modules/"$KERNEL_NAME"/nvidia.ko
       then
         echo "Successfully compiled NVIDIA modules"
-      else 
+      else
         echo "[ERROR] Failed to compile NVIDIA modules"
         cat "$PWD"/nvidia-installer.log
         exit 1
@@ -83,7 +90,7 @@ case $TARGET_ARCH in
           --ui=none --no-questions \
           --no-systemd \
           --skip-depmod \
-          --kernel-module-type=proprietary \
+          ${KERNEL_MODULE_TYPE_FLAG:+"$KERNEL_MODULE_TYPE_FLAG"} \
           --log-file-name="$PWD"/nvidia-installer.log \
           --utility-prefix="$OUTDIR" \
           --utility-libdir=lib \
@@ -91,7 +98,7 @@ case $TARGET_ARCH in
         && test -e "$OUTDIR"/lib/modules/"$KERNEL_NAME"/nvidia.ko
       then
         echo "Successfully compiled NVIDIA modules"
-      else 
+      else
         echo "[ERROR] Failed to compile NVIDIA modules"
         cat /tmp/nvidia/NVIDIA-Linux-aarch64-"$DRIVER_VERSION"/nvidia-installer.log
         cat "$PWD"/nvidia-installer.log
