@@ -1,3 +1,6 @@
+> [!WARNING]
+> **Experimental and not maintained.** This repository is experimental and offered on a best-effort basis. It is not maintained. Do not use it for production workloads.
+
 [![REUSE status](https://api.reuse.software/badge/github.com/kyma-project/gpu-driver)](https://api.reuse.software/info/github.com/kyma-project/gpu-driver)
 
 # Overview
